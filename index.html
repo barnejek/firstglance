@@ -84,9 +84,10 @@
   .r-tag { font-size: 7.5px; color: #666; font-style: italic; grid-column: 2; grid-row: 3; }
   .gauge-col {
     background: #fafafa; border-left: 1px solid #ccc;
-    padding: 4px 6px; display: flex; align-items: center;
+    padding: 8px 12px; display: flex; align-items: center;
+    min-width: 210px;
   }
-  .gauge-wrap { display: flex; gap: 4px; }
+  .gauge-wrap { width: 100%; }
 
   /* MAIN GRID */
   .grid {
@@ -94,6 +95,7 @@
     gap: 10px; margin-bottom: 10px;
   }
   .panel-wide { grid-column: 1 / -1; }
+  .panel-2col { grid-column: span 2; }
 
   /* PANEL */
   .panel { border: 1px solid #111; }
@@ -192,6 +194,32 @@
     border-bottom: 1px solid #ddd; font-style: italic;
   }
 
+  /* NEWS */
+  .news-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid #ddd;
+  }
+  .news-card {
+    padding: 9px 12px; border-right: 1px solid #eee; border-bottom: 1px solid #eee;
+  }
+  .news-card:nth-child(3n) { border-right: none; }
+  .news-meta { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .news-source {
+    font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
+    color: #888; font-weight: 600;
+  }
+  .news-time { font-size: 8px; color: #bbb; font-style: italic; }
+  .news-title {
+    font-family: 'Playfair Display', serif; font-size: 12px; font-weight: 700;
+    line-height: 1.35; margin-bottom: 4px; color: #111;
+  }
+  .news-desc { font-size: 10.5px; color: #555; line-height: 1.45; margin-bottom: 6px; font-style: italic; }
+  .news-link {
+    font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+    color: #888; text-decoration: none; border-bottom: 1px solid #ccc;
+  }
+  .news-link:hover { color: #111; border-color: #111; }
+
   /* FOOTER */
   .footer {
     border-top: 1px solid #111; padding-top: 5px;
@@ -204,6 +232,7 @@
     body { padding: 10px 12px; font-size: 12px; }
     .grid { grid-template-columns: 1fr; }
     .panel-wide { grid-column: 1; }
+    .panel-2col { grid-column: 1; }
     .sectors-grid { grid-template-columns: repeat(4, 1fr); }
     .ratios-row { grid-template-columns: 1fr; }
     .ratio-cell { border-right: none; border-bottom: 1px solid #ccc; }
@@ -216,6 +245,8 @@
     .header { flex-direction: column; gap: 6px; align-items: flex-start; }
     .header-right { text-align: left; }
     .masthead h1 { font-size: 20px; }
+    .news-grid { grid-template-columns: 1fr; }
+    .news-card { border-right: none; }
   }
 </style>
 </head>
@@ -231,7 +262,7 @@
   </div>
   <div class="header-right">
     <strong>Saturday, 23 May 2026</strong><br>
-    13:30 CET &nbsp;&middot;&nbsp; Pre-Market Edition<br>
+    14:09 CET &nbsp;&middot;&nbsp; Pre-Market Edition<br>
     Data: Yahoo Finance &middot; yfinance
   </div>
 </div>
@@ -348,51 +379,40 @@
         </div>
         <div class="gauge-col">
           <div class="gauge-wrap">
-            <svg viewBox="0 0 120 68" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:130px;display:block;margin:2px auto 0">
-  <!-- Arc bands -->
-  <path d="M 16.0 55.0 A 44 44 0 0 1 24.4 29.1" fill="none" stroke="#8b1a1a" stroke-width="7" stroke-linecap="butt"/>
-  <path d="M 24.4 29.1 A 44 44 0 0 1 46.4 13.2" fill="none" stroke="#b04040" stroke-width="7" stroke-linecap="butt"/>
-  <path d="M 46.4 13.2 A 44 44 0 0 1 73.6 13.2"  fill="none" stroke="#888"   stroke-width="7" stroke-linecap="butt"/>
-  <path d="M 73.6 13.2 A 44 44 0 0 1 95.6 29.1"   fill="none" stroke="#4a8c4a" stroke-width="7" stroke-linecap="butt"/>
-  <path d="M 95.6 29.1 A 44 44 0 0 1 104.0 55.0"     fill="none" stroke="#1a5c1a" stroke-width="7" stroke-linecap="butt"/>
-  <!-- Needle -->
-  <line x1="60" y1="55" x2="68.2" y2="11.8"
-        stroke="rgb(122,132,122)" stroke-width="2.2" stroke-linecap="round"/>
-  <circle cx="60" cy="55" r="3" fill="rgb(122,132,122)"/>
-  <!-- Score text -->
-  <text x="60" y="67" text-anchor="middle"
-        font-family="Georgia,serif" font-size="10" font-weight="bold" fill="#666">56</text>
-  <text x="60" y="76" text-anchor="middle"
-        font-family="Georgia,serif" font-size="6.5" fill="#666">Neutral</text>
-  <!-- Labels -->
-  <text x="4"  y="57" font-family="Georgia,serif" font-size="5.5" fill="#8b1a1a">Off</text>
-  <text x="103" y="57" font-family="Georgia,serif" font-size="5.5" fill="#1a5c1a">On</text>
-  <!-- Caption -->
-  <text x="60" y="66" text-anchor="middle"
-        font-family="Georgia,serif" font-size="6" fill="#999" font-style="italic">1-Day</text>
-</svg>
-            <svg viewBox="0 0 120 68" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:130px;display:block;margin:2px auto 0">
-  <!-- Arc bands -->
-  <path d="M 16.0 55.0 A 44 44 0 0 1 24.4 29.1" fill="none" stroke="#8b1a1a" stroke-width="7" stroke-linecap="butt"/>
-  <path d="M 24.4 29.1 A 44 44 0 0 1 46.4 13.2" fill="none" stroke="#b04040" stroke-width="7" stroke-linecap="butt"/>
-  <path d="M 46.4 13.2 A 44 44 0 0 1 73.6 13.2"  fill="none" stroke="#888"   stroke-width="7" stroke-linecap="butt"/>
-  <path d="M 73.6 13.2 A 44 44 0 0 1 95.6 29.1"   fill="none" stroke="#4a8c4a" stroke-width="7" stroke-linecap="butt"/>
-  <path d="M 95.6 29.1 A 44 44 0 0 1 104.0 55.0"     fill="none" stroke="#1a5c1a" stroke-width="7" stroke-linecap="butt"/>
-  <!-- Needle -->
-  <line x1="60" y1="55" x2="68.2" y2="11.8"
-        stroke="rgb(122,132,122)" stroke-width="2.2" stroke-linecap="round"/>
-  <circle cx="60" cy="55" r="3" fill="rgb(122,132,122)"/>
-  <!-- Score text -->
-  <text x="60" y="67" text-anchor="middle"
-        font-family="Georgia,serif" font-size="10" font-weight="bold" fill="#666">56</text>
-  <text x="60" y="76" text-anchor="middle"
-        font-family="Georgia,serif" font-size="6.5" fill="#666">Neutral</text>
-  <!-- Labels -->
-  <text x="4"  y="57" font-family="Georgia,serif" font-size="5.5" fill="#8b1a1a">Off</text>
-  <text x="103" y="57" font-family="Georgia,serif" font-size="5.5" fill="#1a5c1a">On</text>
-  <!-- Caption -->
-  <text x="60" y="66" text-anchor="middle"
-        font-family="Georgia,serif" font-size="6" fill="#999" font-style="italic">1-Week</text>
+            <svg viewBox="0 0 195 60" xmlns="http://www.w3.org/2000/svg"
+     style="width:100%;max-width:195px;display:block">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#8b1a1a" stop-opacity="0.80"/>
+      <stop offset="30%"  stop-color="#c06060" stop-opacity="0.55"/>
+      <stop offset="50%"  stop-color="#cccccc" stop-opacity="0.40"/>
+      <stop offset="70%"  stop-color="#60a060" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#1a5c1a" stop-opacity="0.80"/>
+    </linearGradient>
+  </defs>
+  
+  <text x="2" y="13.5" font-family="Georgia,serif" font-size="6.5"
+        font-weight="700" fill="#999">1D</text>
+  <rect x="26" y="4" width="140" height="10" rx="2" fill="url(#bg)"/>
+  <circle cx="104.4" cy="9.0" r="5" fill="#666" stroke="#fff" stroke-width="1.2"/>
+  <text x="172" y="13.5" font-family="Georgia,serif"
+        font-size="9" font-weight="bold" fill="#666">5.6</text>
+  <text x="172" y="22.0" font-family="Georgia,serif"
+        font-size="6" fill="#666" font-style="italic">Neutral</text>
+  <text x="2" y="39.5" font-family="Georgia,serif" font-size="6.5"
+        font-weight="700" fill="#999">1W</text>
+  <rect x="26" y="30" width="140" height="10" rx="2" fill="url(#bg)"/>
+  <circle cx="104.4" cy="35.0" r="5" fill="#666" stroke="#fff" stroke-width="1.2"/>
+  <text x="172" y="39.5" font-family="Georgia,serif"
+        font-size="9" font-weight="bold" fill="#666">5.6</text>
+  <text x="172" y="48.0" font-family="Georgia,serif"
+        font-size="6" fill="#666" font-style="italic">Neutral</text>
+  <text x="26" y="59" font-family="Georgia,serif" font-size="5.5"
+        fill="#bbb" text-anchor="middle">0</text>
+  <text x="96.0" y="59" font-family="Georgia,serif" font-size="5.5"
+        fill="#bbb" text-anchor="middle">5</text>
+  <text x="166" y="59" font-family="Georgia,serif" font-size="5.5"
+        fill="#bbb" text-anchor="middle">10</text>
 </svg>
           </div>
         </div>
@@ -861,7 +881,7 @@
       </table>
     </div>
   
-    <div class="panel panel-wide">
+    <div class="panel panel-2col">
       <div class="panel-header">
         <span class="p-num">VI.</span>
         <span class="p-title">Commodities</span>
@@ -928,42 +948,47 @@
           <div class="top5-index-label">S&P 500</div>
           <table class="data-table">
             <tr><th class="rank">#</th><th>Ticker</th><th>Company</th>
-                <th class="r">1D</th><th class="r">1W</th></tr>
+                <th class="r">1D</th><th class="r">1W</th><th class="r">YTD</th></tr>
             
           <tr>
             <td class="rank">1</td>
             <td class="ticker">AAPL</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Apple Inc</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Apple Inc</td>
             <td class="r up">+1.26%</td>
             <td class="r up">+2.86%</td>
+            <td class="r up">+14.16%</td>
           </tr>
           <tr>
             <td class="rank">2</td>
             <td class="ticker">TSLA</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Tesla Inc</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Tesla Inc</td>
             <td class="r up">+1.95%</td>
             <td class="r up">+0.89%</td>
+            <td class="r down">-2.75%</td>
           </tr>
           <tr>
             <td class="rank">3</td>
             <td class="ticker">AMZN</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Amazon.com Inc</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Amazon.com Inc</td>
             <td class="r down">-0.80%</td>
             <td class="r up">+0.83%</td>
+            <td class="r up">+17.58%</td>
           </tr>
           <tr>
             <td class="rank">4</td>
             <td class="ticker">BRK-B</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Berkshire Hathaway Inc Class B</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Berkshire Hathaway Inc Class B</td>
             <td class="r up">+1.33%</td>
             <td class="r up">+0.76%</td>
+            <td class="r down">-2.11%</td>
           </tr>
           <tr>
             <td class="rank">5</td>
             <td class="ticker">MSFT</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Microsoft Corp</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Microsoft Corp</td>
             <td class="r down">-0.12%</td>
             <td class="r down">-0.58%</td>
+            <td class="r down">-11.10%</td>
           </tr>
           </table>
         </div>
@@ -971,42 +996,47 @@
           <div class="top5-index-label">EuroStoxx 600</div>
           <table class="data-table">
             <tr><th class="rank">#</th><th>Ticker</th><th>Company</th>
-                <th class="r">1D</th><th class="r">1W</th></tr>
+                <th class="r">1D</th><th class="r">1W</th><th class="r">YTD</th></tr>
             
           <tr>
             <td class="rank">1</td>
             <td class="ticker">ASML.AS</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">ASML Holding NV</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">ASML Holding NV</td>
             <td class="r up">+4.74%</td>
             <td class="r up">+7.84%</td>
+            <td class="r up">+43.37%</td>
           </tr>
           <tr>
             <td class="rank">2</td>
             <td class="ticker">SAP.DE</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">SAP SE</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">SAP SE</td>
             <td class="r up">+0.58%</td>
             <td class="r up">+5.36%</td>
+            <td class="r down">-23.57%</td>
           </tr>
           <tr>
             <td class="rank">3</td>
             <td class="ticker">MC.PA</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Lvmh Moet Hennessy Louis Vuitton SE</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Lvmh Moet Hennessy Louis Vuitton SE</td>
             <td class="r down">-0.20%</td>
             <td class="r up">+3.73%</td>
+            <td class="r down">-25.16%</td>
           </tr>
           <tr>
             <td class="rank">4</td>
             <td class="ticker">ENR.DE</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Siemens Energy AG Ordinary Shares</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Siemens Energy AG Ordinary Shares</td>
             <td class="r up">+1.04%</td>
             <td class="r up">+3.47%</td>
+            <td class="r up">+43.46%</td>
           </tr>
           <tr>
             <td class="rank">5</td>
             <td class="ticker">SIE.DE</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Siemens AG</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Siemens AG</td>
             <td class="r up">+1.72%</td>
             <td class="r up">+3.47%</td>
+            <td class="r up">+13.77%</td>
           </tr>
           </table>
         </div>
@@ -1014,52 +1044,58 @@
           <div class="top5-index-label">MSCI Emerg. Mkts</div>
           <table class="data-table">
             <tr><th class="rank">#</th><th>Ticker</th><th>Company</th>
-                <th class="r">1D</th><th class="r">1W</th></tr>
+                <th class="r">1D</th><th class="r">1W</th><th class="r">YTD</th></tr>
             
           <tr>
             <td class="rank">1</td>
             <td class="ticker">2454.TW</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">MediaTek Inc</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">MediaTek Inc</td>
             <td class="r up">+8.73%</td>
             <td class="r up">+18.40%</td>
+            <td class="r up">+167.68%</td>
           </tr>
           <tr>
             <td class="rank">2</td>
             <td class="ticker">005930.KS</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Samsung Electronics Co Ltd</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Samsung Electronics Co Ltd</td>
             <td class="r down">-2.34%</td>
             <td class="r up">+8.13%</td>
+            <td class="r up">+128.10%</td>
           </tr>
           <tr>
             <td class="rank">3</td>
             <td class="ticker">000660.KS</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">SK Hynix Inc</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">SK Hynix Inc</td>
             <td class="r up">+0.05%</td>
             <td class="r up">+6.71%</td>
+            <td class="r up">+187.24%</td>
           </tr>
           <tr>
             <td class="rank">4</td>
             <td class="ticker">RELIANCE.NS</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Reliance Industries Ltd</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Reliance Industries Ltd</td>
             <td class="r up">+0.36%</td>
             <td class="r up">+1.35%</td>
+            <td class="r down">-14.03%</td>
           </tr>
           <tr>
             <td class="rank">5</td>
             <td class="ticker">2308.TW</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Delta Electronics Inc</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Delta Electronics Inc</td>
             <td class="r up">+3.20%</td>
             <td class="r up">+0.96%</td>
+            <td class="r up">+110.55%</td>
           </tr>
           </table>
         </div>
       </div>
     </div>
+  
 </div>
 
 <div class="footer">
   <span>All prices indicative. Not investment advice. Sourced via yfinance.</span>
-  <span>Generated 2026-05-23 13:30 UTC &middot; First Glance &copy; 2026</span>
+  <span>Generated 2026-05-23 14:09 UTC &middot; First Glance &copy; 2026</span>
 </div>
 
 </body>
