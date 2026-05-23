@@ -1,21 +1,18 @@
 name: First Glance · Daily Refresh
-
 on:
   # ── Every weekday at 06:00 UTC = 07:00 CET (08:00 CEST in summer) ──
   schedule:
     - cron: "0 6 * * 1-5"
-
   # ── Allow manual trigger from GitHub Actions UI ──
   workflow_dispatch:
 
 permissions:
-  contents: write   # needed to commit index.html back to the repo
+  contents: write # needed to commit index.html back to the repo
 
 jobs:
   generate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
       # ── 1. Check out the repo ──────────────────────────────────────────
       - name: Checkout
@@ -32,11 +29,13 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # ── 4. Generate dashboard ─────────────────────────────────────────
+      # ── 4. Generate dashboard ──────────────────────────────────────────
       - name: Generate index.html
+        env:
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
         run: python generate.py
 
-      # ── 5. Commit and push ────────────────────────────────────────────
+      # ── 5. Commit and push ─────────────────────────────────────────────
       - name: Commit dashboard
         run: |
           git config user.name  "github-actions[bot]"
