@@ -90,15 +90,90 @@ NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY", "")
 NEWS_HOURS_BACK = 12
 NEWS_SOURCES = "reuters,cnbc,business-insider,bloomberg,the-wall-street-journal,financial-times,marketwatch"
 
+# RSS feeds used as fallback when NEWSAPI_KEY is not set
+RSS_FEEDS = [
+    ("CNBC",        "https://www.cnbc.com/id/10000664/device/rss/rss.html"),
+    ("FT Markets",  "https://www.ft.com/markets?format=rss"),
+    ("MarketWatch", "https://feeds.marketwatch.com/marketwatch/topstories/"),
+    ("Yahoo Fin.",  "https://finance.yahoo.com/news/rssindex"),
+    ("BBC Business","https://feeds.bbci.co.uk/news/business/rss.xml"),
+]
+
 # ---------------------------------------------------------------------------
 # NEWS FETCH
 # ---------------------------------------------------------------------------
 
-def fetch_news(hours_back=NEWS_HOURS_BACK):
-    """Fetch financial market news from the last N hours via NewsAPI."""
-    if not NEWSAPI_KEY:
-        print("  NEWS: NEWSAPI_KEY not set — skipping news section.")
+def _rss_to_article(entry, source_name):
+    """Convert a feedparser entry to the same dict shape as NewsAPI articles."""
+    import re
+
+    published_at = ""
+    if hasattr(entry, "published_parsed") and entry.published_parsed:
+        try:
+            published_at = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc).isoformat()
+        except Exception:
+            pass
+
+    desc = ""
+    if hasattr(entry, "summary"):
+        desc = re.sub(r"<[^>]+>", "", entry.summary or "").strip()
+
+    return {
+        "source":      {"name": source_name},
+        "title":       getattr(entry, "title", ""),
+        "description": desc,
+        "url":         getattr(entry, "link", "#"),
+        "publishedAt": published_at,
+    }
+
+
+def fetch_news_rss(hours_back=NEWS_HOURS_BACK):
+    """Fetch financial market news via free RSS feeds (no API key needed)."""
+    try:
+        import feedparser
+    except ImportError:
+        print("  NEWS RSS: feedparser not installed — run: pip install feedparser")
         return []
+
+    cutoff = datetime.now(tz=timezone.utc) - timedelta(hours=hours_back)
+    articles = []
+
+    for source_name, url in RSS_FEEDS:
+        try:
+            feed = feedparser.parse(url)
+            count = 0
+            for entry in feed.entries:
+                art = _rss_to_article(entry, source_name)
+                if art["publishedAt"]:
+                    try:
+                        pub = datetime.fromisoformat(art["publishedAt"].replace("Z", "+00:00"))
+                        if pub < cutoff:
+                            continue
+                    except Exception:
+                        pass
+                articles.append(art)
+                count += 1
+                if count >= 4:      # max 4 per source to keep variety
+                    break
+            print(f"  NEWS RSS [{source_name}]: {count} articles")
+        except Exception as e:
+            print(f"  NEWS RSS [{source_name}]: ERROR - {e}")
+
+    def _pub_key(a):
+        try:
+            return datetime.fromisoformat(a["publishedAt"].replace("Z", "+00:00"))
+        except Exception:
+            return datetime.min.replace(tzinfo=timezone.utc)
+
+    articles.sort(key=_pub_key, reverse=True)
+    return articles[:12]
+
+
+def fetch_news(hours_back=NEWS_HOURS_BACK):
+    """Fetch financial market news. Uses NewsAPI if key is set, else falls back to RSS."""
+    if not NEWSAPI_KEY:
+        print("  NEWS: NEWSAPI_KEY not set — falling back to RSS feeds.")
+        return fetch_news_rss(hours_back)
     try:
         from newsapi import NewsApiClient
         api   = NewsApiClient(api_key=NEWSAPI_KEY)
@@ -117,8 +192,8 @@ def fetch_news(hours_back=NEWS_HOURS_BACK):
         print(f"  NEWS: {len(articles)} articles from last {hours_back}h")
         return articles
     except Exception as e:
-        print(f"  NEWS: ERROR - {e}")
-        return []
+        print(f"  NEWS: NewsAPI ERROR - {e}. Falling back to RSS.")
+        return fetch_news_rss(hours_back)
 
 
 # ---------------------------------------------------------------------------
