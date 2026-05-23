@@ -9,6 +9,7 @@ Auto-run:      GitHub Actions cron @ 06:00 UTC (07:00 CET)
 """
 
 import base64
+import os
 import warnings
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -84,6 +85,42 @@ SECTOR_ROLE = {
     "XLP": "def", "XLV": "def", "XLU": "def", "XLRE": "def",
 }
 
+# NewsAPI — set NEWSAPI_KEY env var to enable the news section
+NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY", "")
+NEWS_HOURS_BACK = 12
+NEWS_SOURCES = "reuters,cnbc,business-insider,bloomberg,the-wall-street-journal,financial-times,marketwatch"
+
+# ---------------------------------------------------------------------------
+# NEWS FETCH
+# ---------------------------------------------------------------------------
+
+def fetch_news(hours_back=NEWS_HOURS_BACK):
+    """Fetch financial market news from the last N hours via NewsAPI."""
+    if not NEWSAPI_KEY:
+        print("  NEWS: NEWSAPI_KEY not set — skipping news section.")
+        return []
+    try:
+        from newsapi import NewsApiClient
+        api   = NewsApiClient(api_key=NEWSAPI_KEY)
+        cet   = timezone(timedelta(hours=1))
+        from_dt = datetime.now(tz=cet) - timedelta(hours=hours_back)
+
+        resp = api.get_everything(
+            q='(markets OR stocks OR bonds OR "interest rates" OR forex OR economy OR "central bank" OR equities)',
+            sources=NEWS_SOURCES,
+            from_param=from_dt.strftime("%Y-%m-%dT%H:%M:%S"),
+            language="en",
+            sort_by="publishedAt",
+            page_size=12,
+        )
+        articles = resp.get("articles", [])
+        print(f"  NEWS: {len(articles)} articles from last {hours_back}h")
+        return articles
+    except Exception as e:
+        print(f"  NEWS: ERROR - {e}")
+        return []
+
+
 # ---------------------------------------------------------------------------
 # DATA FETCH
 # ---------------------------------------------------------------------------
@@ -124,7 +161,7 @@ def fetch_top5_movers():
             names_map = dict(zip(holdings.index, holdings["Name"]))
 
             raw = yf.download(
-                tickers=syms, period="10d", interval="1d",
+                tickers=syms, period="ytd", interval="1d",
                 auto_adjust=True, progress=False, threads=True,
             )
             try:
@@ -137,20 +174,24 @@ def fetch_top5_movers():
                 try:
                     s = closes[sym].dropna()
                     if len(s) >= 6:
-                        ret_1w = (s.iloc[-1] - s.iloc[-6]) / s.iloc[-6] * 100
-                        ret_1d = (s.iloc[-1] - s.iloc[-2]) / s.iloc[-2] * 100
+                        ret_1w  = (s.iloc[-1] - s.iloc[-6]) / s.iloc[-6] * 100
+                        ret_1d  = (s.iloc[-1] - s.iloc[-2]) / s.iloc[-2] * 100
+                        ret_ytd = (s.iloc[-1] - s.iloc[0])  / s.iloc[0]  * 100
                         rows.append({
-                            "symbol": sym,
-                            "name": names_map.get(sym, sym),
-                            "ret_1w": ret_1w,
-                            "ret_1d": ret_1d,
+                            "symbol":  sym,
+                            "name":    names_map.get(sym, sym),
+                            "ret_1w":  ret_1w,
+                            "ret_1d":  ret_1d,
+                            "ret_ytd": ret_ytd,
                         })
                 except Exception:
                     pass
 
-            rows.sort(key=lambda x: x["ret_1w"], reverse=True)
+            # Sort by 1W return descending; None-safe
+            rows.sort(key=lambda x: x["ret_1w"] if x["ret_1w"] is not None else -9999,
+                      reverse=True)
             result[label] = rows[:5]
-            print(f"  Top5 {label}: OK ({len(rows)} holdings ranked)")
+            print(f"  Top5 {label}: OK ({len(rows)} holdings ranked by 1W)")
         except Exception as e:
             print(f"  Top5 {label}: ERROR - {e}")
     return result
@@ -402,86 +443,72 @@ def calc_derived(data, timeframe="1d"):
 
 
 # ---------------------------------------------------------------------------
-# GAUGE SVG
+# SCORE BAR SVG (replaces speedometer)
 # ---------------------------------------------------------------------------
 
-def render_gauge(score, label):
+def render_bar(score_1d, score_1w):
     """
-    Render a speedometer-style semi-circle SVG.
-    score: 0 (full risk-off) to 100 (full risk-on).
+    Render two horizontal score bars (1D and 1W).
+    score: 0 (full risk-off) to 100 (full risk-on), displayed as 0.0–10.0.
     """
-    import math
-    score = max(0, min(100, score))
+    BAR_X   = 26   # left edge of bar
+    BAR_W   = 140  # bar width
+    BAR_H   = 10   # bar height
+    ROW_H   = 26   # vertical spacing between rows
+    W_TOTAL = 195  # total SVG width
 
-    # Arc geometry
-    cx, cy, r = 60, 55, 44
-    # Map score 0-100 to angle -180 to 0 (left to right across the bottom)
-    angle_deg = -180 + score * 1.8     # -180 (left) .. 0 (right)
-    angle_rad = math.radians(angle_deg)
-    nx = cx + r * math.cos(angle_rad)
-    ny = cy + r * math.sin(angle_rad)
+    def mood_color(score):
+        if score >= 70:  return "#1a5c1a"
+        if score <= 30:  return "#8b1a1a"
+        return "#666"
 
-    # Color interpolation: red(0) -> gray(50) -> green(100)
-    if score <= 50:
-        t = score / 50
-        # red #8b1a1a -> gray #888
-        rs = int(139 + t * (136 - 139))
-        gs = int(26  + t * (136 - 26))
-        bs = int(26  + t * (136 - 26))
-    else:
-        t = (score - 50) / 50
-        # gray #888 -> green #1a6b1a
-        rs = int(136 + t * (26  - 136))
-        gs = int(136 + t * (107 - 136))
-        bs = int(136 + t * (26  - 136))
-    needle_color = f"rgb({rs},{gs},{bs})"
+    def mood_label(score):
+        if score >= 70:  return "Risk-On"
+        if score <= 30:  return "Risk-Off"
+        return "Neutral"
 
-    # Gauge arc segments (colored bands)
-    def arc_path(start_deg, end_deg, radius):
-        s_rad = math.radians(start_deg)
-        e_rad = math.radians(end_deg)
-        x1 = cx + radius * math.cos(s_rad)
-        y1 = cy + radius * math.sin(s_rad)
-        x2 = cx + radius * math.cos(e_rad)
-        y2 = cy + radius * math.sin(e_rad)
-        large = 1 if abs(end_deg - start_deg) > 180 else 0
-        return f"M {x1:.1f} {y1:.1f} A {radius} {radius} 0 {large} 1 {x2:.1f} {y2:.1f}"
+    def bar_row(score, label, y):
+        score = max(0, min(100, score))
+        pos   = BAR_X + (score / 100) * BAR_W
+        col   = mood_color(score)
+        mood  = mood_label(score)
+        disp  = f"{score / 10:.1f}"
+        return f"""
+  <text x="2" y="{y + BAR_H - 0.5:.1f}" font-family="Georgia,serif" font-size="6.5"
+        font-weight="700" fill="#999">{label}</text>
+  <rect x="{BAR_X}" y="{y}" width="{BAR_W}" height="{BAR_H}" rx="2" fill="url(#bg)"/>
+  <circle cx="{pos:.1f}" cy="{y + BAR_H / 2:.1f}" r="5" fill="{col}" stroke="#fff" stroke-width="1.2"/>
+  <text x="{BAR_X + BAR_W + 6}" y="{y + BAR_H - 0.5:.1f}" font-family="Georgia,serif"
+        font-size="9" font-weight="bold" fill="{col}">{disp}</text>
+  <text x="{BAR_X + BAR_W + 6}" y="{y + BAR_H + 8:.1f}" font-family="Georgia,serif"
+        font-size="6" fill="{col}" font-style="italic">{mood}</text>"""
 
-    score_str = str(score)
-    if score >= 70:
-        mood = "Risk-On"
-        mood_col = "#1a5c1a"
-    elif score <= 30:
-        mood = "Risk-Off"
-        mood_col = "#8b1a1a"
-    else:
-        mood = "Neutral"
-        mood_col = "#666"
+    rows = bar_row(score_1d, "1D", 4) + bar_row(score_1w, "1W", 4 + ROW_H)
+    h_total = 4 + 2 * ROW_H + 4
 
-    svg = f"""<svg viewBox="0 0 120 68" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:130px;display:block;margin:2px auto 0">
-  <!-- Arc bands -->
-  <path d="{arc_path(-180,-144,r)}" fill="none" stroke="#8b1a1a" stroke-width="7" stroke-linecap="butt"/>
-  <path d="{arc_path(-144,-108,r)}" fill="none" stroke="#b04040" stroke-width="7" stroke-linecap="butt"/>
-  <path d="{arc_path(-108,-72,r)}"  fill="none" stroke="#888"   stroke-width="7" stroke-linecap="butt"/>
-  <path d="{arc_path(-72,-36,r)}"   fill="none" stroke="#4a8c4a" stroke-width="7" stroke-linecap="butt"/>
-  <path d="{arc_path(-36,0,r)}"     fill="none" stroke="#1a5c1a" stroke-width="7" stroke-linecap="butt"/>
-  <!-- Needle -->
-  <line x1="{cx}" y1="{cy}" x2="{nx:.1f}" y2="{ny:.1f}"
-        stroke="{needle_color}" stroke-width="2.2" stroke-linecap="round"/>
-  <circle cx="{cx}" cy="{cy}" r="3" fill="{needle_color}"/>
-  <!-- Score text -->
-  <text x="{cx}" y="{cy+12}" text-anchor="middle"
-        font-family="Georgia,serif" font-size="10" font-weight="bold" fill="{mood_col}">{score_str}</text>
-  <text x="{cx}" y="{cy+21}" text-anchor="middle"
-        font-family="Georgia,serif" font-size="6.5" fill="{mood_col}">{mood}</text>
-  <!-- Labels -->
-  <text x="4"  y="{cy+2}" font-family="Georgia,serif" font-size="5.5" fill="#8b1a1a">Off</text>
-  <text x="103" y="{cy+2}" font-family="Georgia,serif" font-size="5.5" fill="#1a5c1a">On</text>
-  <!-- Caption -->
-  <text x="{cx}" y="66" text-anchor="middle"
-        font-family="Georgia,serif" font-size="6" fill="#999" font-style="italic">{label}</text>
+    # tick positions
+    mid_x = BAR_X + BAR_W / 2
+    tick_y = h_total - 1
+
+    return f"""<svg viewBox="0 0 {W_TOTAL} {h_total}" xmlns="http://www.w3.org/2000/svg"
+     style="width:100%;max-width:{W_TOTAL}px;display:block">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#8b1a1a" stop-opacity="0.80"/>
+      <stop offset="30%"  stop-color="#c06060" stop-opacity="0.55"/>
+      <stop offset="50%"  stop-color="#cccccc" stop-opacity="0.40"/>
+      <stop offset="70%"  stop-color="#60a060" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#1a5c1a" stop-opacity="0.80"/>
+    </linearGradient>
+  </defs>
+  {rows}
+  <text x="{BAR_X}" y="{tick_y}" font-family="Georgia,serif" font-size="5.5"
+        fill="#bbb" text-anchor="middle">0</text>
+  <text x="{mid_x:.1f}" y="{tick_y}" font-family="Georgia,serif" font-size="5.5"
+        fill="#bbb" text-anchor="middle">5</text>
+  <text x="{BAR_X + BAR_W}" y="{tick_y}" font-family="Georgia,serif" font-size="5.5"
+        fill="#bbb" text-anchor="middle">10</text>
 </svg>"""
-    return svg
 
 
 # ---------------------------------------------------------------------------
@@ -747,7 +774,7 @@ def build_panel_commodities(data, d1d, d1w):
     _, cu_cls, cu_tag = _spread_signal(cu_au_1d, "cu_au")
 
     return f"""
-    <div class="panel panel-wide">
+    <div class="panel panel-2col">
       <div class="panel-header">
         <span class="p-num">VI.</span>
         <span class="p-title">Commodities</span>
@@ -788,16 +815,17 @@ def build_panel_top5(top5):
           <tr>
             <td class="rank">{i+1}</td>
             <td class="ticker">{r['symbol']}</td>
-            <td class="label" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{r['name']}</td>
+            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{r['name']}</td>
             <td class="r {pct_cls(r['ret_1d'])}">{fmt_pct(r['ret_1d'])}</td>
             <td class="r {pct_cls(r['ret_1w'])}">{fmt_pct(r['ret_1w'])}</td>
+            <td class="r {pct_cls(r.get('ret_ytd'))}">{fmt_pct(r.get('ret_ytd'))}</td>
           </tr>"""
         return f"""
         <div class="top5-block">
           <div class="top5-index-label">{label}</div>
           <table class="data-table">
             <tr><th class="rank">#</th><th>Ticker</th><th>Company</th>
-                <th class="r">1D</th><th class="r">1W</th></tr>
+                <th class="r">1D</th><th class="r">1W</th><th class="r">YTD</th></tr>
             {trs}
           </table>
         </div>"""
@@ -816,6 +844,62 @@ def build_panel_top5(top5):
       </div>
       <div class="top5-grid">
         {blocks}
+      </div>
+    </div>"""
+
+
+# ---------------------------------------------------------------------------
+# NEWS PANEL
+# ---------------------------------------------------------------------------
+
+def build_panel_news(articles, hours_back=NEWS_HOURS_BACK):
+    if not articles:
+        return ""
+
+    def time_ago(published_at):
+        try:
+            pub   = datetime.fromisoformat(published_at.replace("Z", "+00:00"))
+            now   = datetime.now(tz=timezone.utc)
+            mins  = int((now - pub).total_seconds() / 60)
+            if mins < 60:
+                return f"{mins}m ago"
+            return f"{mins // 60}h ago"
+        except Exception:
+            return ""
+
+    def esc(s):
+        return (s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    cards = ""
+    for art in articles[:12]:
+        source = esc(art.get("source", {}).get("name", ""))
+        title  = esc(art.get("title") or "")
+        desc   = esc(art.get("description") or "")
+        url    = art.get("url", "#")
+        t_ago  = time_ago(art.get("publishedAt", ""))
+        if len(desc) > 170:
+            desc = desc[:167] + "…"
+
+        cards += f"""
+        <div class="news-card">
+          <div class="news-meta">
+            <span class="news-source">{source}</span>
+            <span class="news-time">{t_ago}</span>
+          </div>
+          <div class="news-title">{title}</div>
+          <div class="news-desc">{desc}</div>
+          <a class="news-link" href="{url}" target="_blank" rel="noopener noreferrer">Read &rarr;</a>
+        </div>"""
+
+    return f"""
+    <div class="panel panel-wide">
+      <div class="panel-header">
+        <span class="p-num">VIII.</span>
+        <span class="p-title">Market News</span>
+        <span class="p-sub">Last {hours_back}h &middot; Reuters &middot; CNBC &middot; Bloomberg &middot; More</span>
+      </div>
+      <div class="news-grid">
+        {cards}
       </div>
     </div>"""
 
@@ -841,8 +925,7 @@ def build_regime_bar(d1d, d1w):
 
     score_1d = d1d.get("score", 50)
     score_1w = d1w.get("score", 50)
-    gauge_1d = render_gauge(score_1d, "1-Day")
-    gauge_1w = render_gauge(score_1w, "1-Week")
+    bar_svg  = render_bar(score_1d, score_1w)
 
     return f"""
     <div class="regime-outer">
@@ -860,8 +943,7 @@ def build_regime_bar(d1d, d1w):
         </div>
         <div class="gauge-col">
           <div class="gauge-wrap">
-            {gauge_1d}
-            {gauge_1w}
+            {bar_svg}
           </div>
         </div>
       </div>
@@ -952,9 +1034,10 @@ CSS = """
   .r-tag { font-size: 7.5px; color: #666; font-style: italic; grid-column: 2; grid-row: 3; }
   .gauge-col {
     background: #fafafa; border-left: 1px solid #ccc;
-    padding: 4px 6px; display: flex; align-items: center;
+    padding: 8px 12px; display: flex; align-items: center;
+    min-width: 210px;
   }
-  .gauge-wrap { display: flex; gap: 4px; }
+  .gauge-wrap { width: 100%; }
 
   /* MAIN GRID */
   .grid {
@@ -962,6 +1045,7 @@ CSS = """
     gap: 10px; margin-bottom: 10px;
   }
   .panel-wide { grid-column: 1 / -1; }
+  .panel-2col { grid-column: span 2; }
 
   /* PANEL */
   .panel { border: 1px solid #111; }
@@ -1060,6 +1144,32 @@ CSS = """
     border-bottom: 1px solid #ddd; font-style: italic;
   }
 
+  /* NEWS */
+  .news-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid #ddd;
+  }
+  .news-card {
+    padding: 9px 12px; border-right: 1px solid #eee; border-bottom: 1px solid #eee;
+  }
+  .news-card:nth-child(3n) { border-right: none; }
+  .news-meta { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .news-source {
+    font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
+    color: #888; font-weight: 600;
+  }
+  .news-time { font-size: 8px; color: #bbb; font-style: italic; }
+  .news-title {
+    font-family: 'Playfair Display', serif; font-size: 12px; font-weight: 700;
+    line-height: 1.35; margin-bottom: 4px; color: #111;
+  }
+  .news-desc { font-size: 10.5px; color: #555; line-height: 1.45; margin-bottom: 6px; font-style: italic; }
+  .news-link {
+    font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+    color: #888; text-decoration: none; border-bottom: 1px solid #ccc;
+  }
+  .news-link:hover { color: #111; border-color: #111; }
+
   /* FOOTER */
   .footer {
     border-top: 1px solid #111; padding-top: 5px;
@@ -1072,6 +1182,7 @@ CSS = """
     body { padding: 10px 12px; font-size: 12px; }
     .grid { grid-template-columns: 1fr; }
     .panel-wide { grid-column: 1; }
+    .panel-2col { grid-column: 1; }
     .sectors-grid { grid-template-columns: repeat(4, 1fr); }
     .ratios-row { grid-template-columns: 1fr; }
     .ratio-cell { border-right: none; border-bottom: 1px solid #ccc; }
@@ -1084,11 +1195,13 @@ CSS = """
     .header { flex-direction: column; gap: 6px; align-items: flex-start; }
     .header-right { text-align: left; }
     .masthead h1 { font-size: 20px; }
+    .news-grid { grid-template-columns: 1fr; }
+    .news-card { border-right: none; }
   }
 """
 
 
-def render_html(data, d1d, d1w, top5, logo_b64, generated_at):
+def render_html(data, d1d, d1w, top5, logo_b64, generated_at, articles=None):
     now_str  = generated_at.strftime("%A, %d %B %Y")
     time_str = generated_at.strftime("%H:%M CET")
 
@@ -1100,6 +1213,7 @@ def render_html(data, d1d, d1w, top5, logo_b64, generated_at):
     panel_asia   = build_panel_asia(data)
     panel_comm   = build_panel_commodities(data, d1d, d1w)
     panel_top5   = build_panel_top5(top5)
+    panel_news   = build_panel_news(articles or [])
 
     logo_tag = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img" alt="First Glance">' if logo_b64 else ""
 
@@ -1138,6 +1252,7 @@ def render_html(data, d1d, d1w, top5, logo_b64, generated_at):
   {panel_asia}
   {panel_comm}
   {panel_top5}
+  {panel_news}
 </div>
 
 <div class="footer">
@@ -1181,269 +1296,13 @@ def main():
     print("Fetching top-5 movers from ETF holdings...")
     top5 = fetch_top5_movers()
 
-    print("Rendering HTML...")
-    html = render_html(data, d1d, d1w, top5, logo_b64, now)
-
-    with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-        f.write(html)
-    print(f"\n  [OK] {OUTPUT_PATH}")
-    print(f"  Size: {len(html)//1024} KB")
-
-
-if __name__ == "__main__":
-    main()
-v>
-        <div class="gauge-col">
-          <div class="gauge-wrap">
-            {gauge_1d}
-            {gauge_1w}
-          </div>
-        </div>
-      </div>
-    </div>"""
-
-
-# ---------------------------------------------------------------------------
-# CSS + HTML RENDERER + MAIN
-# ---------------------------------------------------------------------------
-
-CSS = """
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: #fff; font-family: 'Crimson Text', Georgia, serif;
-    font-size: 13px; color: #111; padding: 18px 22px;
-    max-width: 1440px; margin: 0 auto;
-  }
-  .header {
-    display: flex; align-items: flex-end; justify-content: space-between;
-    border-top: 3px solid #111; border-bottom: 1px solid #111;
-    padding: 8px 0 6px; margin-bottom: 10px;
-  }
-  .header-left { display: flex; align-items: center; gap: 14px; }
-  .logo-img { height: 52px; width: auto; display: block; }
-  .masthead h1 {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: 24px; font-weight: 900; letter-spacing: .08em;
-    text-transform: uppercase; line-height: 1;
-  }
-  .masthead h2 {
-    font-size: 10.5px; font-weight: 400; letter-spacing: .22em;
-    text-transform: uppercase; color: #444; margin-top: 2px;
-  }
-  .header-right {
-    text-align: right; font-size: 10.5px; letter-spacing: .05em;
-    color: #444; line-height: 1.7;
-  }
-  .header-right strong { font-family: 'Playfair Display', serif; font-size: 12px; color: #111; }
-  .regime-outer { margin-bottom: 10px; }
-  .regime-bar { border: 1px solid #111; display: flex; align-items: stretch; }
-  .regime-label-col {
-    background: #111; color: #fff; padding: 6px 10px;
-    display: flex; align-items: center; justify-content: center; min-width: 58px;
-  }
-  .regime-label-text {
-    font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
-    text-align: center; line-height: 1.4;
-  }
-  .regime-rows { flex: 1; display: flex; flex-direction: column; }
-  .regime-row { display: flex; flex: 1; border-bottom: 1px solid #ddd; }
-  .regime-row:last-child { border-bottom: none; }
-  .regime-row-2w { background: #fafafa; }
-  .regime-item {
-    flex: 1; padding: 3px 8px; border-left: 1px solid #ddd;
-    display: grid; grid-template-rows: auto auto auto;
-    grid-template-columns: auto 1fr; column-gap: 4px;
-  }
-  .regime-item:first-child { border-left: none; }
-  .r-tf {
-    font-size: 7.5px; font-weight: 600; letter-spacing: .1em;
-    text-transform: uppercase; color: #999;
-    grid-column: 1; grid-row: 1 / 4; align-self: center;
-    writing-mode: vertical-rl; transform: rotate(180deg); padding: 2px 2px;
-    border-right: 1px solid #e0e0e0;
-  }
-  .r-key { font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: #888; grid-column: 2; grid-row: 1; }
-  .r-val { font-weight: 600; font-size: 11px; grid-column: 2; grid-row: 2; }
-  .r-tag { font-size: 7.5px; color: #666; font-style: italic; grid-column: 2; grid-row: 3; }
-  .gauge-col {
-    background: #fafafa; border-left: 1px solid #ccc;
-    padding: 4px 6px; display: flex; align-items: center;
-  }
-  .gauge-wrap { display: flex; gap: 4px; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-  .panel-wide { grid-column: 1 / -1; }
-  .panel { border: 1px solid #111; }
-  .panel-header {
-    background: #111; color: #fff; padding: 4px 9px;
-    display: flex; align-items: baseline; gap: 8px;
-  }
-  .p-num { font-size: 9px; opacity: .5; letter-spacing: .1em; }
-  .p-title { font-family: 'Playfair Display', serif; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-  .p-sub { font-size: 9px; opacity: .6; letter-spacing: .08em; margin-left: auto; font-style: italic; }
-  .data-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  .data-table th {
-    font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
-    color: #888; font-weight: 400; border-bottom: 1px solid #999;
-    padding: 3px 6px; text-align: left;
-  }
-  .data-table th.r { text-align: right; }
-  .data-table td { padding: 3px 6px; border-bottom: 1px solid #ebebeb; vertical-align: middle; }
-  .data-table td.r { text-align: right; font-variant-numeric: tabular-nums; }
-  .data-table td.ticker { font-size: 9.5px; letter-spacing: .04em; color: #444; font-weight: 600; }
-  .data-table td.label { font-style: italic; font-size: 10px; color: #333; }
-  .data-table td.rank { text-align: center; font-size: 10px; color: #aaa; width: 18px; }
-  .data-table td.role-col { font-size: 9px; color: #777; font-style: italic; }
-  .data-table tr:last-child td { border-bottom: none; }
-  .data-table tr.derived { background: #f6f6f6; }
-  .data-table tr.derived td { font-size: 10px; border-bottom: 1px solid #ddd; }
-  .data-table tr.section-head td {
-    font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
-    color: #aaa; padding-top: 5px; padding-bottom: 2px; border-bottom: 1px solid #d0d0d0;
-  }
-  .up { color: #1a5c1a; }
-  .down { color: #8b1a1a; }
-  .neu { color: #333; }
-  .badge {
-    display: inline-block; padding: 1px 5px; font-size: 7.5px;
-    letter-spacing: .07em; text-transform: uppercase;
-    border: 1px solid currentColor; vertical-align: middle;
-    margin-left: 3px; font-style: normal;
-  }
-  .badge.risk-on { color: #1a5c1a; }
-  .badge.risk-off { color: #8b1a1a; }
-  .badge.neutral { color: #777; }
-  .sector-label-row { background: #f0f0f0; border-top: 1px solid #ccc; padding: 2px 8px; }
-  .sector-timeframe-label { font-size: 8px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; color: #888; }
-  .sectors-grid { display: grid; grid-template-columns: repeat(11, 1fr); border-top: 1px solid #ddd; }
-  .sector-cell { padding: 4px 3px; border-right: 1px solid #e8e8e8; text-align: center; }
-  .sector-cell:last-child { border-right: none; }
-  .sector-cell .s-tick { font-weight: 600; font-size: 10.5px; display: block; }
-  .sector-cell .s-name { display: block; font-size: 7px; color: #999; text-transform: uppercase; font-style: italic; margin: 1px 0; }
-  .sector-cell .s-val { display: block; font-size: 11px; font-variant-numeric: tabular-nums; }
-  .sector-cell.cyc { background: #fafafa; }
-  .sector-cell.def { background: #f2f2f2; }
-  .sectors-grid-1w .sector-cell.cyc { background: #f5f5f5; }
-  .sectors-grid-1w .sector-cell.def { background: #eeeeee; }
-  .ratios-row { border-top: 1px solid #111; display: grid; grid-template-columns: repeat(3,1fr); }
-  .ratio-cell { padding: 5px 9px; border-right: 1px solid #ccc; }
-  .ratio-cell:last-child { border-right: none; }
-  .rc-label { font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: #999; }
-  .rc-val { font-size: 11.5px; font-weight: 600; }
-  .top5-grid { display: grid; grid-template-columns: repeat(3,1fr); border-top: 1px solid #ddd; }
-  .top5-block { border-right: 1px solid #ddd; }
-  .top5-block:last-child { border-right: none; }
-  .top5-index-label {
-    background: #f5f5f5; padding: 4px 9px; font-size: 9px;
-    letter-spacing: .1em; text-transform: uppercase; color: #666;
-    border-bottom: 1px solid #ddd; font-style: italic;
-  }
-  .footer {
-    border-top: 1px solid #111; padding-top: 5px;
-    display: flex; justify-content: space-between;
-    font-size: 9px; letter-spacing: .06em; color: #aaa; font-style: italic;
-  }
-  @media (max-width: 768px) {
-    body { padding: 10px 12px; font-size: 12px; }
-    .grid { grid-template-columns: 1fr; }
-    .panel-wide { grid-column: 1; }
-    .sectors-grid { grid-template-columns: repeat(4, 1fr); }
-    .ratios-row { grid-template-columns: 1fr; }
-    .ratio-cell { border-right: none; border-bottom: 1px solid #ccc; }
-    .ratio-cell:last-child { border-bottom: none; }
-    .top5-grid { grid-template-columns: 1fr; }
-    .top5-block { border-right: none; border-bottom: 1px solid #ddd; }
-    .regime-rows { overflow-x: auto; }
-    .regime-row { min-width: 600px; }
-    .gauge-col { display: none; }
-    .header { flex-direction: column; gap: 6px; align-items: flex-start; }
-    .header-right { text-align: left; }
-    .masthead h1 { font-size: 20px; }
-  }
-"""
-
-
-def render_html(data, d1d, d1w, top5, logo_b64, generated_at):
-    now_str  = generated_at.strftime("%A, %d %B %Y")
-    time_str = generated_at.strftime("%H:%M CET")
-
-    regime_html  = build_regime_bar(d1d, d1w)
-    panel_fi     = build_panel_fixed_income(data, d1d, d1w)
-    panel_credit = build_panel_credit(data, d1d, d1w)
-    panel_fx     = build_panel_fx(data)
-    panel_equity = build_panel_equity(data, d1d, d1w)
-    panel_asia   = build_panel_asia(data)
-    panel_comm   = build_panel_commodities(data, d1d, d1w)
-    panel_top5   = build_panel_top5(top5)
-
-    logo_tag = f'<img src="data:image/png;base64,{logo_b64}" class="logo-img" alt="First Glance">' if logo_b64 else ""
-
-    return (
-        "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n"
-        "<meta charset=\"UTF-8\">\n"
-        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
-        "<title>First Glance - The Macro Matrix - " + now_str + "</title>\n"
-        "<style>" + CSS + "</style>\n</head>\n<body>\n\n"
-        "<div class=\"header\">\n"
-        "  <div class=\"header-left\">\n    " + logo_tag + "\n"
-        "    <div class=\"masthead\"><h1>First Glance</h1><h2>The Macro Matrix</h2></div>\n"
-        "  </div>\n"
-        "  <div class=\"header-right\">"
-        "<strong>" + now_str + "</strong><br>" + time_str + " &middot; Pre-Market Edition<br>"
-        "Data: Yahoo Finance &middot; yfinance"
-        "</div>\n</div>\n\n"
-        + regime_html + "\n\n"
-        "<div class=\"grid\">\n"
-        + panel_fi + "\n" + panel_credit + "\n" + panel_fx + "\n"
-        + panel_equity + "\n" + panel_asia + "\n" + panel_comm + "\n"
-        + panel_top5 + "\n"
-        "</div>\n\n"
-        "<div class=\"footer\">\n"
-        "  <span>All prices indicative. Not investment advice. Sourced via yfinance.</span>\n"
-        "  <span>Generated " + generated_at.strftime("%Y-%m-%d %H:%M UTC") + " &middot; First Glance &copy; " + str(generated_at.year) + "</span>\n"
-        "</div>\n\n</body>\n</html>"
-    )
-
-
-def main():
-    cet = timezone(timedelta(hours=1))
-    now = datetime.now(tz=cet)
-
-    print("=" * 60)
-    print("  FIRST GLANCE - THE MACRO MATRIX")
-    print(f"  {now.strftime('%A, %d %B %Y  %H:%M CET')}")
-    print("=" * 60)
-
-    logo_b64 = ""
-    if LOGO_PATH.exists():
-        with open(LOGO_PATH, "rb") as f:
-            logo_b64 = base64.b64encode(f.read()).decode()
-        print(f"  Logo: {len(logo_b64)//1024} KB base64")
-    else:
-        print("  WARNING: logo not found")
-
-    data = fetch_all()
-
-    print("Calculating derived indicators...")
-    d1d = calc_derived(data, "1d")
-    d1w = calc_derived(data, "1w")
-    print(f"  1D score: {d1d.get('score')}  |  1W score: {d1w.get('score')}")
-
-    print("Fetching top-5 movers from ETF holdings...")
-    top5 = fetch_top5_movers()
+    print("Fetching market news...")
+    articles = fetch_news()
 
     print("Rendering HTML...")
-    html = render_html(data, d1d, d1w, top5, logo_b64, now)
+    html = render_html(data, d1d, d1w, top5, logo_b64, now, articles=articles)
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-        f.write(html)
-    print(f"\n  [OK] {OUTPUT_PATH}")
-    print(f"  Size: {len(html)//1024} KB")
-
-
-if __name__ == "__main__":
-    main()
-ncoding="utf-8") as f:
         f.write(html)
     print(f"\n  [OK] {OUTPUT_PATH}")
     print(f"  Size: {len(html)//1024} KB")
