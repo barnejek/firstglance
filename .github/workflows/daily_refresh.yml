@@ -1,10 +1,14 @@
 name: First Glance · Daily Refresh
 on:
+  # ── Every weekday at 05:12 UTC = 07:12 CEST ──
   schedule:
-    # ── Every weekday at 05:12 UTC = 07:12 CEST (w letnim) / 06:12 CET (w zimowym) ──
-    - cron: "12 5 * * 1-5"  
+    - cron: "12 5 * * 1-5"
   # ── Allow manual trigger from GitHub Actions UI ──
   workflow_dispatch:
+
+# ── TUTAJ DOPISUJEMY TĘ LINIĘ, ŻEBY WYGASIĆ OSTRZEŻENIE ──
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 permissions:
   contents: write # needed to commit index.html back to the repo
