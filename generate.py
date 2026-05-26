@@ -5,7 +5,7 @@ Fetches market data via yfinance, calculates macro indicators,
 and renders a WSJ-vintage styled HTML dashboard (index.html).
 
 Run manually:  python generate.py
-Auto-run:      GitHub Actions cron @ 06:00 UTC (07:00 CET)
+Auto-run:      GitHub Actions cron @ 05:12 UTC (07:12 CEST)
 """
 
 import base64
@@ -90,7 +90,7 @@ NEWSAPI_KEY = os.environ.get("NEWSAPI_KEY", "")
 NEWS_HOURS_BACK = 12
 NEWS_SOURCES = "reuters,cnbc,business-insider,bloomberg,the-wall-street-journal,financial-times,marketwatch"
 
-# RSS feeds used as fallback when NEWSAPI_KEY is not set
+# RSS feeds used as fallback when NEWSAPI_KEY is not set or returns empty
 RSS_FEEDS = [
     ("CNBC",        "https://www.cnbc.com/id/10000664/device/rss/rss.html"),
     ("FT Markets",  "https://www.ft.com/markets?format=rss"),
@@ -189,7 +189,13 @@ def fetch_news(hours_back=NEWS_HOURS_BACK):
             page_size=12,
         )
         articles = resp.get("articles", [])
-        print(f"  NEWS: {len(articles)} articles from last {hours_back}h")
+        print(f"  NEWS: {len(articles)} articles from last {hours_back}h via NewsAPI")
+        
+        # Fallback to RSS if NewsAPI returned 0 articles
+        if not articles:
+            print("  NEWS: NewsAPI returned 0 articles. Trying RSS fallback...")
+            return fetch_news_rss(hours_back)
+            
         return articles
     except Exception as e:
         print(f"  NEWS: NewsAPI ERROR - {e}. Falling back to RSS.")
@@ -232,8 +238,10 @@ def fetch_top5_movers():
             holdings = yf.Ticker(etf).get_funds_data().top_holdings
             if holdings is None or len(holdings) == 0:
                 continue
-            syms = list(holdings.index)
-            names_map = dict(zip(holdings.index, holdings["Name"]))
+            
+            # Map ticker for China Construction Bank if found to avoid delisting error
+            syms = [str(s).replace("00939", "00939.HK") for s in holdings.index]
+            names_map = dict(zip(syms, holdings["Name"]))
 
             raw = yf.download(
                 tickers=syms, period="ytd", interval="1d",
@@ -569,7 +577,7 @@ def render_bar(score_1d, score_1w):
      style="width:100%;max-width:{W_TOTAL}px;display:block">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%"   stop-color="#8b1a1a" stop-opacity="0.80"/>
+      <stop offset="0%"    stop-color="#8b1a1a" stop-opacity="0.80"/>
       <stop offset="30%"  stop-color="#c06060" stop-opacity="0.55"/>
       <stop offset="50%"  stop-color="#cccccc" stop-opacity="0.40"/>
       <stop offset="70%"  stop-color="#60a060" stop-opacity="0.55"/>
@@ -841,7 +849,6 @@ def build_panel_commodities(data, d1d, d1w):
     spread_1d_chg = ((bz - cl) - (bz_prev - cl_prev)) if bz and cl else None
     spread_1w_chg = ((bz - cl) - (bz_6 - cl_6)) if bz and cl else None
     spread_str = f"${spread:.2f}" if spread else "&mdash;"
-    spread_d1 = f"{fmt_pct(spread_1d_chg / cl * 100 if spread_1d_chg and cl else None)}"
     spread_d1_str = f"+${spread_1d_chg:.2f}" if spread_1d_chg and spread_1d_chg >= 0 else (f"${spread_1d_chg:.2f}" if spread_1d_chg else "&mdash;")
     spread_d1w_str = f"+${spread_1w_chg:.2f}" if spread_1w_chg and spread_1w_chg >= 0 else (f"${spread_1w_chg:.2f}" if spread_1w_chg else "&mdash;")
 
@@ -1026,7 +1033,7 @@ def build_regime_bar(d1d, d1w):
 
 
 # ---------------------------------------------------------------------------
-# FULL HTML
+# FULL HTML CSS
 # ---------------------------------------------------------------------------
 
 CSS = """
