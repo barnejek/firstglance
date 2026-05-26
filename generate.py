@@ -239,7 +239,6 @@ def fetch_top5_movers():
             if holdings is None or len(holdings) == 0:
                 continue
             
-            # Map ticker for China Construction Bank if found to avoid delisting error
             syms = [str(s).replace("00939", "00939.HK") for s in holdings.index]
             names_map = dict(zip(syms, holdings["Name"]))
 
@@ -270,7 +269,6 @@ def fetch_top5_movers():
                 except Exception:
                     pass
 
-            # Sort by 1W return descending; None-safe
             rows.sort(key=lambda x: x["ret_1w"] if x["ret_1w"] is not None else -9999,
                       reverse=True)
             result[label] = rows[:5]
@@ -465,7 +463,7 @@ def calc_derived(data, timeframe="1d"):
         if timeframe == "1w":
             prev_fvx = get_yield_1w_ago(data, "^FVX") or fvx
             prev_tyx = get_yield_1w_ago(data, "^TYX") or tyx
-            d["5s30s"] = (tyx - fvx)   # current spread
+            d["5s30s"] = (tyx - fvx)
             d["5s30s_delta"] = (tyx - fvx) - (prev_tyx - prev_fvx)
         else:
             prev_fvx = float(data["^FVX"].iloc[-2]) if "^FVX" in data else fvx
@@ -498,7 +496,6 @@ def calc_derived(data, timeframe="1d"):
     if xly is not None and xlp is not None:
         d["xly_xlp"] = xly - xlp
 
-    # IWF / IWD: Growth vs Value  (positive = growth leading = risk-on)
     iwf = delta(data, "IWF")
     iwd = delta(data, "IWD")
     if iwf is not None and iwd is not None:
@@ -513,12 +510,11 @@ def calc_derived(data, timeframe="1d"):
     if audjpy is not None:
         d["audjpy"] = audjpy
 
-    # Composite risk-appetite score [0-100], 50 = neutral
     scores = [_score(d.get(k), k) for k, _ in REGIME_KEYS]
     valid = [s for s in scores if s != 0]
     if valid:
-        raw = sum(valid) / len(REGIME_KEYS)   # -1..+1
-        d["score"] = round((raw + 1) / 2 * 100)   # 0..100
+        raw = sum(valid) / len(REGIME_KEYS)
+        d["score"] = round((raw + 1) / 2 * 100)
     else:
         d["score"] = 50
 
@@ -526,19 +522,15 @@ def calc_derived(data, timeframe="1d"):
 
 
 # ---------------------------------------------------------------------------
-# SCORE BAR SVG (replaces speedometer)
+# SCORE BAR SVG
 # ---------------------------------------------------------------------------
 
 def render_bar(score_1d, score_1w):
-    """
-    Render two horizontal score bars (1D and 1W).
-    score: 0 (full risk-off) to 100 (full risk-on), displayed as 0.0–10.0.
-    """
-    BAR_X   = 26   # left edge of bar
-    BAR_W   = 140  # bar width
-    BAR_H   = 10   # bar height
-    ROW_H   = 26   # vertical spacing between rows
-    W_TOTAL = 195  # total SVG width
+    BAR_X   = 26
+    BAR_W   = 140
+    BAR_H   = 12   # Slightly taller bars
+    ROW_H   = 30   # More vertical room
+    W_TOTAL = 195
 
     def mood_color(score):
         if score >= 70:  return "#1a5c1a"
@@ -557,19 +549,18 @@ def render_bar(score_1d, score_1w):
         mood  = mood_label(score)
         disp  = f"{score / 10:.1f}"
         return f"""
-  <text x="2" y="{y + BAR_H - 0.5:.1f}" font-family="Georgia,serif" font-size="6.5"
+  <text x="2" y="{y + BAR_H - 1:.1f}" font-family="Georgia,serif" font-size="7.5"
         font-weight="700" fill="#999">{label}</text>
   <rect x="{BAR_X}" y="{y}" width="{BAR_W}" height="{BAR_H}" rx="2" fill="url(#bg)"/>
-  <circle cx="{pos:.1f}" cy="{y + BAR_H / 2:.1f}" r="5" fill="{col}" stroke="#fff" stroke-width="1.2"/>
-  <text x="{BAR_X + BAR_W + 6}" y="{y + BAR_H - 0.5:.1f}" font-family="Georgia,serif"
-        font-size="9" font-weight="bold" fill="{col}">{disp}</text>
-  <text x="{BAR_X + BAR_W + 6}" y="{y + BAR_H + 8:.1f}" font-family="Georgia,serif"
-        font-size="6" fill="{col}" font-style="italic">{mood}</text>"""
+  <circle cx="{pos:.1f}" cy="{y + BAR_H / 2:.1f}" r="5.5" fill="{col}" stroke="#fff" stroke-width="1.2"/>
+  <text x="{BAR_X + BAR_W + 6}" y="{y + BAR_H - 1:.1f}" font-family="Georgia,serif"
+        font-size="10.5" font-weight="bold" fill="{col}">{disp}</text>
+  <text x="{BAR_X + BAR_W + 6}" y="{y + BAR_H + 9:.1f}" font-family="Georgia,serif"
+        font-size="7" fill="{col}" font-style="italic">{mood}</text>"""
 
     rows = bar_row(score_1d, "1D", 4) + bar_row(score_1w, "1W", 4 + ROW_H)
-    h_total = 4 + 2 * ROW_H + 4
+    h_total = 4 + 2 * ROW_H + 6
 
-    # tick positions
     mid_x = BAR_X + BAR_W / 2
     tick_y = h_total - 1
 
@@ -585,11 +576,11 @@ def render_bar(score_1d, score_1w):
     </linearGradient>
   </defs>
   {rows}
-  <text x="{BAR_X}" y="{tick_y}" font-family="Georgia,serif" font-size="5.5"
+  <text x="{BAR_X}" y="{tick_y}" font-family="Georgia,serif" font-size="6.5"
         fill="#bbb" text-anchor="middle">0</text>
-  <text x="{mid_x:.1f}" y="{tick_y}" font-family="Georgia,serif" font-size="5.5"
+  <text x="{mid_x:.1f}" y="{tick_y}" font-family="Georgia,serif" font-size="6.5"
         fill="#bbb" text-anchor="middle">5</text>
-  <text x="{BAR_X + BAR_W}" y="{tick_y}" font-family="Georgia,serif" font-size="5.5"
+  <text x="{BAR_X + BAR_W}" y="{tick_y}" font-family="Georgia,serif" font-size="6.5"
         fill="#bbb" text-anchor="middle">10</text>
 </svg>"""
 
@@ -604,7 +595,6 @@ def _table_header(cols):
 
 
 def build_panel_fixed_income(data, d1d, d1w):
-    # US rates rows (yield display)
     us_rows = ""
     for t in TICKERS["us_rates"]:
         p = get_price(data, t)
@@ -723,11 +713,6 @@ def build_panel_fx(data):
 
 
 def build_panel_asia(data):
-    rows = ""
-    for t in TICKERS["asia"]:
-        p = get_price(data, t); dd = get_delta_1d(data, t); dw = get_delta_1w(data, t)
-        rows += tr_row(t, NAMES[t], fmt_price(p, 2),
-                       fmt_pct(dd), pct_cls(dd), fmt_pct(dw), pct_cls(dw))
     return f"""
     <div class="panel">
       <div class="panel-header">
@@ -751,7 +736,6 @@ def build_panel_asia(data):
 
 
 def build_panel_equity(data, d1d, d1w):
-    # Sector cells — 1D row + 1W row
     sectors = ["XLK","XLF","XLI","XLB","XLY","XLE","XLC",
                "XLP","XLV","XLU","XLRE"]
 
@@ -838,7 +822,6 @@ def build_panel_commodities(data, d1d, d1w):
         rows += tr_row(t, NAMES[t], fmt_price(p, 2),
                        fmt_pct(dd), pct_cls(dd), fmt_pct(dw), pct_cls(dw), extra)
 
-    # Brent-WTI spread
     bz = get_price(data, "BZ=F"); cl = get_price(data, "CL=F")
     bz_prev = float(data["BZ=F"].iloc[-2]) if "BZ=F" in data and len(data["BZ=F"]) >= 2 else bz
     cl_prev = float(data["CL=F"].iloc[-2]) if "CL=F" in data and len(data["CL=F"]) >= 2 else cl
@@ -875,7 +858,7 @@ def build_panel_commodities(data, d1d, d1w):
         <tr class="derived">
           <td colspan="2" class="ticker">
             Cu / Au Ratio
-            <em style="font-size:9px;color:#aaa;font-style:italic;"> (Gundlach)</em>
+            <em style="font-size:10px;color:#aaa;font-style:italic;"> (Gundlach)</em>
           </td>
           <td class="r" colspan="2"><strong>1D: {fmt_pct(cu_au_1d)}</strong></td>
           <td class="r" colspan="2"><strong>1W: {fmt_pct(cu_au_1w)}</strong> {badge(cu_tag, cu_cls)}</td>
@@ -897,7 +880,7 @@ def build_panel_top5(top5):
           <tr>
             <td class="rank">{i+1}</td>
             <td class="ticker">{r['symbol']}</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{r['name']}</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{r['name']}</td>
             <td class="r {pct_cls(r['ret_1d'])}">{fmt_pct(r['ret_1d'])}</td>
             <td class="r {pct_cls(r['ret_1w'])}">{fmt_pct(r['ret_1w'])}</td>
             <td class="r {pct_cls(r.get('ret_ytd'))}">{fmt_pct(r.get('ret_ytd'))}</td>
@@ -1033,250 +1016,257 @@ def build_regime_bar(d1d, d1w):
 
 
 # ---------------------------------------------------------------------------
-# FULL HTML CSS
+# FULL HTML CSS (FONT ACCENTUATED VERSION)
 # ---------------------------------------------------------------------------
 
 CSS = """
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     background: #fff;
     font-family: 'Crimson Text', Georgia, serif;
-    font-size: 13px; color: #111;
-    padding: 18px 22px;
-    max-width: 1440px; margin: 0 auto;
+    font-size: 15px; color: #111; /* Up from 13px */
+    padding: 20px 24px;
+    max-width: 1600px; margin: 0 auto; /* Widened canvas for bigger fonts */
   }
 
   /* HEADER */
   .header {
     display: flex; align-items: flex-end; justify-content: space-between;
-    border-top: 3px solid #111; border-bottom: 1px solid #111;
-    padding: 8px 0 6px; margin-bottom: 10px;
+    border-top: 4px solid #111; border-bottom: 1.5px solid #111;
+    padding: 10px 0 8px; margin-bottom: 12px;
   }
-  .header-left { display: flex; align-items: center; gap: 14px; }
-  .logo-img { height: 52px; width: auto; display: block; }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-img { height: 60px; width: auto; display: block; } /* Scaled up logo */
   .masthead h1 {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 24px; font-weight: 900; letter-spacing: .08em;
+    font-size: 30px; font-weight: 900; letter-spacing: .08em; /* Up from 24px */
     text-transform: uppercase; line-height: 1;
   }
   .masthead h2 {
-    font-size: 10.5px; font-weight: 400; letter-spacing: .22em;
-    text-transform: uppercase; color: #444; margin-top: 2px;
+    font-size: 12px; font-weight: 400; letter-spacing: .22em; /* Up from 10.5px */
+    text-transform: uppercase; color: #444; margin-top: 4px;
   }
   .header-right {
-    text-align: right; font-size: 10.5px;
+    text-align: right; font-size: 12px; /* Up from 10.5px */
     letter-spacing: .05em; color: #444; line-height: 1.7;
   }
-  .header-right strong { font-family: 'Playfair Display', serif; font-size: 12px; color: #111; }
+  .header-right strong { font-family: 'Playfair Display', serif; font-size: 14px; color: #111; }
 
   /* REGIME BAR */
-  .regime-outer { margin-bottom: 10px; }
+  .regime-outer { margin-bottom: 12px; }
   .regime-bar {
-    border: 1px solid #111; display: flex; align-items: stretch;
+    border: 1.5px solid #111; display: flex; align-items: stretch;
   }
   .regime-label-col {
-    background: #111; color: #fff; padding: 6px 10px;
+    background: #111; color: #fff; padding: 6px 12px;
     display: flex; align-items: center; justify-content: center;
-    min-width: 58px;
+    min-width: 68px;
   }
   .regime-label-text {
-    font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+    font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
     text-align: center; line-height: 1.4;
   }
   .regime-rows { flex: 1; display: flex; flex-direction: column; }
   .regime-row {
-    display: flex; flex: 1; border-bottom: 1px solid #ddd;
+    display: flex; flex: 1; border-bottom: 1px solid #ccc;
   }
   .regime-row:last-child { border-bottom: none; }
   .regime-row-2w { background: #fafafa; }
   .regime-item {
-    flex: 1; padding: 3px 8px; border-left: 1px solid #ddd;
+    flex: 1; padding: 5px 10px; border-left: 1px solid #ccc;
     display: grid;
     grid-template-rows: auto auto auto;
     grid-template-columns: auto 1fr;
-    column-gap: 4px;
+    column-gap: 6px;
   }
   .regime-item:first-child { border-left: none; }
   .r-tf {
-    font-size: 7.5px; font-weight: 600; letter-spacing: .1em;
-    text-transform: uppercase; color: #999;
+    font-size: 9px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: #888;
     grid-column: 1; grid-row: 1 / 4; align-self: center;
-    padding-right: 4px; border-right: 1px solid #e0e0e0; margin-right: 0;
+    padding-right: 5px; border-right: 1px solid #ccc; margin-right: 2px;
     writing-mode: vertical-rl; transform: rotate(180deg);
-    padding: 2px 2px;
   }
   .r-key {
-    font-size: 8px; letter-spacing: .1em; text-transform: uppercase;
-    color: #888; grid-column: 2; grid-row: 1;
+    font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+    color: #666; grid-column: 2; grid-row: 1;
   }
-  .r-val { font-weight: 600; font-size: 11px; grid-column: 2; grid-row: 2; }
-  .r-tag { font-size: 7.5px; color: #666; font-style: italic; grid-column: 2; grid-row: 3; }
+  .r-val { font-weight: 700; font-size: 13px; grid-column: 2; grid-row: 2; } /* Up from 11px */
+  .r-tag { font-size: 9px; color: #555; font-style: italic; grid-column: 2; grid-row: 3; }
+
   .gauge-col {
     background: #fafafa; border-left: 1px solid #ccc;
-    padding: 8px 12px; display: flex; align-items: center;
-    min-width: 210px;
+    padding: 8px 14px; display: flex; align-items: center;
+    min-width: 220px;
   }
   .gauge-wrap { width: 100%; }
 
   /* MAIN GRID */
   .grid {
     display: grid; grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px; margin-bottom: 10px;
+    gap: 12px; margin-bottom: 12px;
   }
   .panel-wide { grid-column: 1 / -1; }
   .panel-2col { grid-column: span 2; }
 
   /* PANEL */
-  .panel { border: 1px solid #111; }
+  .panel { border: 1.5px solid #111; }
   .panel-header {
-    background: #111; color: #fff; padding: 4px 9px;
+    background: #111; color: #fff; padding: 6px 10px; /* Enhanced cell heights */
     display: flex; align-items: baseline; gap: 8px;
   }
-  .p-num { font-size: 9px; opacity: .5; letter-spacing: .1em; }
+  .p-num { font-size: 10px; opacity: .5; letter-spacing: .1em; }
   .p-title {
-    font-family: 'Playfair Display', serif; font-size: 11px;
+    font-family: 'Playfair Display', serif; font-size: 13px; /* Up from 11px */
     font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
   }
   .p-sub {
-    font-size: 9px; opacity: .6; letter-spacing: .08em;
+    font-size: 10px; opacity: .6; letter-spacing: .08em;
     margin-left: auto; font-style: italic;
   }
 
   /* TABLE */
-  .data-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; } /* Up from 11px */
   .data-table th {
-    font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
-    color: #888; font-weight: 400; border-bottom: 1px solid #999;
-    padding: 3px 6px; text-align: left;
+    font-size: 9px; letter-spacing: .12em; text-transform: uppercase; /* Up from 8px */
+    color: #666; font-weight: 600; border-bottom: 1.5px solid #777;
+    padding: 5px 8px; text-align: left;
   }
   .data-table th.r { text-align: right; }
-  .data-table td { padding: 3px 6px; border-bottom: 1px solid #ebebeb; vertical-align: middle; }
-  .data-table td.r { text-align: right; font-variant-numeric: tabular-nums; }
-  .data-table td.ticker { font-size: 9.5px; letter-spacing: .04em; color: #444; font-weight: 600; }
-  .data-table td.label { font-style: italic; font-size: 10px; color: #333; }
-  .data-table td.rank { text-align: center; font-size: 10px; color: #aaa; width: 18px; }
-  .data-table td.role-col { font-size: 9px; color: #777; font-style: italic; }
+  .data-table td { padding: 5px 8px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; } /* Expanded breathing room */
+  .data-table td.r { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .data-table td.ticker { font-size: 11px; letter-spacing: .04em; color: #333; font-weight: 700; } /* Up from 9.5px */
+  .data-table td.label { font-style: italic; font-size: 12px; color: #222; } /* Up from 10px */
+  .data-table td.rank { text-align: center; font-size: 11px; color: #999; width: 22px; }
+  .data-table td.role-col { font-size: 10.5px; color: #666; font-style: italic; }
   .data-table tr:last-child td { border-bottom: none; }
-  .data-table tr.derived { background: #f6f6f6; }
-  .data-table tr.derived td { font-size: 10px; border-bottom: 1px solid #ddd; }
+  .data-table tr.derived { background: #f5f5f5; }
+  .data-table tr.derived td { font-size: 11.5px; border-bottom: 1px solid #dcdcdc; }
   .data-table tr.section-head td {
-    font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
-    color: #aaa; padding-top: 5px; padding-bottom: 2px;
-    border-bottom: 1px solid #d0d0d0;
+    font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+    color: #777; padding-top: 8px; padding-bottom: 4px;
+    border-bottom: 1px solid #ccc; font-weight: 700;
   }
 
-  .up   { color: #1a5c1a; }
-  .down { color: #8b1a1a; }
-  .neu  { color: #333; }
+  .up   { color: #154c15; }
+  .down { color: #7a1515; }
+  .neu  { color: #222; }
 
   .badge {
-    display: inline-block; padding: 1px 5px; font-size: 7.5px;
+    display: inline-block; padding: 2px 6px; font-size: 8.5px; /* Scaled up badges */
     letter-spacing: .07em; text-transform: uppercase;
-    border: 1px solid currentColor; vertical-align: middle; margin-left: 3px;
-    font-style: normal;
+    border: 1px solid currentColor; vertical-align: middle; margin-left: 4px;
+    font-style: normal; font-weight: 700;
   }
-  .badge.risk-on  { color: #1a5c1a; }
-  .badge.risk-off { color: #8b1a1a; }
-  .badge.neutral  { color: #777; }
+  .badge.risk-on  { color: #154c15; }
+  .badge.risk-off { color: #7a1515; }
+  .badge.neutral  { color: #555; }
 
   /* EQUITY SECTORS */
   .sector-label-row {
-    background: #f0f0f0; border-top: 1px solid #ccc; padding: 2px 8px;
+    background: #eee; border-top: 1px solid #ccc; padding: 4px 10px;
   }
   .sector-timeframe-label {
-    font-size: 8px; font-weight: 600; letter-spacing: .15em;
-    text-transform: uppercase; color: #888;
+    font-size: 9.5px; font-weight: 700; letter-spacing: .15em;
+    text-transform: uppercase; color: #666;
   }
   .sectors-grid {
     display: grid; grid-template-columns: repeat(11, 1fr);
-    border-top: 1px solid #ddd;
+    border-top: 1px solid #ccc;
   }
   .sector-cell {
-    padding: 4px 3px; border-right: 1px solid #e8e8e8;
+    padding: 6px 4px; border-right: 1px solid #e0e0e0;
     text-align: center;
   }
   .sector-cell:last-child { border-right: none; }
-  .sector-cell .s-tick { font-weight: 600; font-size: 10.5px; display: block; }
-  .sector-cell .s-name { display: block; font-size: 7px; color: #999; text-transform: uppercase; font-style: italic; margin: 1px 0; }
-  .sector-cell .s-val  { display: block; font-size: 11px; font-variant-numeric: tabular-nums; }
+  .sector-cell .s-tick { font-weight: 700; font-size: 12px; display: block; } /* Up from 10.5px */
+  .sector-cell .s-name { display: block; font-size: 8px; color: #777; text-transform: uppercase; font-style: italic; margin: 2px 0; }
+  .sector-cell .s-val  { display: block; font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 600; }
   .sector-cell.cyc { background: #fafafa; }
-  .sector-cell.def { background: #f2f2f2; }
-  .sectors-grid-1w .sector-cell.cyc { background: #f5f5f5; }
-  .sectors-grid-1w .sector-cell.def { background: #eeeeee; }
+  .sector-cell.def { background: #f0f0f0; }
+  .sectors-grid-1w .sector-cell.cyc { background: #f4f4f4; }
+  .sectors-grid-1w .sector-cell.def { background: #e9e9e9; }
+  
   .ratios-row {
-    border-top: 1px solid #111; display: grid; grid-template-columns: repeat(3,1fr);
+    border-top: 1.5px solid #111; display: grid; grid-template-columns: repeat(3,1fr);
   }
-  .ratio-cell { padding: 5px 9px; border-right: 1px solid #ccc; }
+  .ratio-cell { padding: 6px 10px; border-right: 1px solid #ccc; }
   .ratio-cell:last-child { border-right: none; }
-  .rc-label { font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: #999; }
-  .rc-val { font-size: 11.5px; font-weight: 600; }
+  .rc-label { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: #777; font-weight: 600; }
+  .rc-val { font-size: 13px; font-weight: 700; margin-top: 2px; }
 
   /* TOP 5 */
   .top5-grid {
-    display: grid; grid-template-columns: repeat(3,1fr); border-top: 1px solid #ddd;
+    display: grid; grid-template-columns: repeat(3,1fr); border-top: 1px solid #ccc;
   }
-  .top5-block { border-right: 1px solid #ddd; }
+  .top5-block { border-right: 1px solid #ccc; }
   .top5-block:last-child { border-right: none; }
   .top5-index-label {
-    background: #f5f5f5; padding: 4px 9px; font-size: 9px;
-    letter-spacing: .1em; text-transform: uppercase; color: #666;
-    border-bottom: 1px solid #ddd; font-style: italic;
+    background: #f2f2f2; padding: 5px 10px; font-size: 10.5px;
+    letter-spacing: .1em; text-transform: uppercase; color: #444;
+    border-bottom: 1px solid #ccc; font-style: italic; font-weight: 600;
   }
 
   /* NEWS */
   .news-grid {
     display: grid; grid-template-columns: repeat(3, 1fr);
-    border-top: 1px solid #ddd;
+    border-top: 1px solid #ccc;
   }
   .news-card {
-    padding: 9px 12px; border-right: 1px solid #eee; border-bottom: 1px solid #eee;
+    padding: 12px 14px; border-right: 1px solid #e8e8e8; border-bottom: 1px solid #e8e8e8;
   }
   .news-card:nth-child(3n) { border-right: none; }
-  .news-meta { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .news-meta { display: flex; justify-content: space-between; margin-bottom: 4px; }
   .news-source {
-    font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
-    color: #888; font-weight: 600;
+    font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+    color: #666; font-weight: 700;
   }
-  .news-time { font-size: 8px; color: #bbb; font-style: italic; }
+  .news-time { font-size: 9px; color: #aaa; font-style: italic; }
   .news-title {
-    font-family: 'Playfair Display', serif; font-size: 12px; font-weight: 700;
-    line-height: 1.35; margin-bottom: 4px; color: #111;
+    font-family: 'Playfair Display', serif; font-size: 14px; font-weight: 700; /* Up from 12px */
+    line-height: 1.35; margin-bottom: 6px; color: #111;
   }
-  .news-desc { font-size: 10.5px; color: #555; line-height: 1.45; margin-bottom: 6px; font-style: italic; }
+  .news-desc { font-size: 12px; color: #444; line-height: 1.5; margin-bottom: 8px; font-style: italic; } /* Up from 10.5px */
   .news-link {
-    font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
-    color: #888; text-decoration: none; border-bottom: 1px solid #ccc;
+    font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+    color: #666; text-decoration: none; border-bottom: 1px solid #bbb; font-weight: 600;
   }
   .news-link:hover { color: #111; border-color: #111; }
 
   /* FOOTER */
   .footer {
-    border-top: 1px solid #111; padding-top: 5px;
+    border-top: 1.5px solid #111; padding-top: 6px; margin-top: 6px;
     display: flex; justify-content: space-between;
-    font-size: 9px; letter-spacing: .06em; color: #aaa; font-style: italic;
+    font-size: 10px; letter-spacing: .06em; color: #888; font-style: italic;
   }
 
-  /* MOBILE */
+  /* MOBILE RESPONSIVENESS ADJUSTMENTS */
+  @media (max-width: 1024px) {
+    .sectors-grid { grid-template-columns: repeat(6, 1fr); }
+    .sectors-grid .sector-cell:nth-child(6) { border-right: none; }
+  }
+
   @media (max-width: 768px) {
-    body { padding: 10px 12px; font-size: 12px; }
+    body { padding: 12px 14px; font-size: 14px; }
     .grid { grid-template-columns: 1fr; }
     .panel-wide { grid-column: 1; }
     .panel-2col { grid-column: 1; }
     .sectors-grid { grid-template-columns: repeat(4, 1fr); }
+    .sectors-grid .sector-cell:nth-child(4n) { border-right: none; }
     .ratios-row { grid-template-columns: 1fr; }
     .ratio-cell { border-right: none; border-bottom: 1px solid #ccc; }
     .ratio-cell:last-child { border-bottom: none; }
     .top5-grid { grid-template-columns: 1fr; }
-    .top5-block { border-right: none; border-bottom: 1px solid #ddd; }
+    .top5-block { border-right: none; border-bottom: 1px solid #ccc; }
     .regime-rows { overflow-x: auto; }
-    .regime-row { min-width: 600px; }
+    .regime-row { min-width: 650px; }
     .gauge-col { display: none; }
-    .header { flex-direction: column; gap: 6px; align-items: flex-start; }
+    .header { flex-direction: column; gap: 8px; align-items: flex-start; }
     .header-right { text-align: left; }
-    .masthead h1 { font-size: 20px; }
+    .masthead h1 { font-size: 24px; }
     .news-grid { grid-template-columns: 1fr; }
     .news-card { border-right: none; }
   }
