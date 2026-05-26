@@ -5,246 +5,253 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>First Glance - The Macro Matrix - Tuesday, 26 May 2026</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     background: #fff;
     font-family: 'Crimson Text', Georgia, serif;
-    font-size: 13px; color: #111;
-    padding: 18px 22px;
-    max-width: 1440px; margin: 0 auto;
+    font-size: 15px; color: #111; /* Up from 13px */
+    padding: 20px 24px;
+    max-width: 1600px; margin: 0 auto; /* Widened canvas for bigger fonts */
   }
 
   /* HEADER */
   .header {
     display: flex; align-items: flex-end; justify-content: space-between;
-    border-top: 3px solid #111; border-bottom: 1px solid #111;
-    padding: 8px 0 6px; margin-bottom: 10px;
+    border-top: 4px solid #111; border-bottom: 1.5px solid #111;
+    padding: 10px 0 8px; margin-bottom: 12px;
   }
-  .header-left { display: flex; align-items: center; gap: 14px; }
-  .logo-img { height: 52px; width: auto; display: block; }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-img { height: 60px; width: auto; display: block; } /* Scaled up logo */
   .masthead h1 {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 24px; font-weight: 900; letter-spacing: .08em;
+    font-size: 30px; font-weight: 900; letter-spacing: .08em; /* Up from 24px */
     text-transform: uppercase; line-height: 1;
   }
   .masthead h2 {
-    font-size: 10.5px; font-weight: 400; letter-spacing: .22em;
-    text-transform: uppercase; color: #444; margin-top: 2px;
+    font-size: 12px; font-weight: 400; letter-spacing: .22em; /* Up from 10.5px */
+    text-transform: uppercase; color: #444; margin-top: 4px;
   }
   .header-right {
-    text-align: right; font-size: 10.5px;
+    text-align: right; font-size: 12px; /* Up from 10.5px */
     letter-spacing: .05em; color: #444; line-height: 1.7;
   }
-  .header-right strong { font-family: 'Playfair Display', serif; font-size: 12px; color: #111; }
+  .header-right strong { font-family: 'Playfair Display', serif; font-size: 14px; color: #111; }
 
   /* REGIME BAR */
-  .regime-outer { margin-bottom: 10px; }
+  .regime-outer { margin-bottom: 12px; }
   .regime-bar {
-    border: 1px solid #111; display: flex; align-items: stretch;
+    border: 1.5px solid #111; display: flex; align-items: stretch;
   }
   .regime-label-col {
-    background: #111; color: #fff; padding: 6px 10px;
+    background: #111; color: #fff; padding: 6px 12px;
     display: flex; align-items: center; justify-content: center;
-    min-width: 58px;
+    min-width: 68px;
   }
   .regime-label-text {
-    font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+    font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
     text-align: center; line-height: 1.4;
   }
   .regime-rows { flex: 1; display: flex; flex-direction: column; }
   .regime-row {
-    display: flex; flex: 1; border-bottom: 1px solid #ddd;
+    display: flex; flex: 1; border-bottom: 1px solid #ccc;
   }
   .regime-row:last-child { border-bottom: none; }
   .regime-row-2w { background: #fafafa; }
   .regime-item {
-    flex: 1; padding: 3px 8px; border-left: 1px solid #ddd;
+    flex: 1; padding: 5px 10px; border-left: 1px solid #ccc;
     display: grid;
     grid-template-rows: auto auto auto;
     grid-template-columns: auto 1fr;
-    column-gap: 4px;
+    column-gap: 6px;
   }
   .regime-item:first-child { border-left: none; }
   .r-tf {
-    font-size: 7.5px; font-weight: 600; letter-spacing: .1em;
-    text-transform: uppercase; color: #999;
+    font-size: 9px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: #888;
     grid-column: 1; grid-row: 1 / 4; align-self: center;
-    padding-right: 4px; border-right: 1px solid #e0e0e0; margin-right: 0;
+    padding-right: 5px; border-right: 1px solid #ccc; margin-right: 2px;
     writing-mode: vertical-rl; transform: rotate(180deg);
-    padding: 2px 2px;
   }
   .r-key {
-    font-size: 8px; letter-spacing: .1em; text-transform: uppercase;
-    color: #888; grid-column: 2; grid-row: 1;
+    font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+    color: #666; grid-column: 2; grid-row: 1;
   }
-  .r-val { font-weight: 600; font-size: 11px; grid-column: 2; grid-row: 2; }
-  .r-tag { font-size: 7.5px; color: #666; font-style: italic; grid-column: 2; grid-row: 3; }
+  .r-val { font-weight: 700; font-size: 13px; grid-column: 2; grid-row: 2; } /* Up from 11px */
+  .r-tag { font-size: 9px; color: #555; font-style: italic; grid-column: 2; grid-row: 3; }
+
   .gauge-col {
     background: #fafafa; border-left: 1px solid #ccc;
-    padding: 8px 12px; display: flex; align-items: center;
-    min-width: 210px;
+    padding: 8px 14px; display: flex; align-items: center;
+    min-width: 220px;
   }
   .gauge-wrap { width: 100%; }
 
   /* MAIN GRID */
   .grid {
     display: grid; grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px; margin-bottom: 10px;
+    gap: 12px; margin-bottom: 12px;
   }
   .panel-wide { grid-column: 1 / -1; }
   .panel-2col { grid-column: span 2; }
 
   /* PANEL */
-  .panel { border: 1px solid #111; }
+  .panel { border: 1.5px solid #111; }
   .panel-header {
-    background: #111; color: #fff; padding: 4px 9px;
+    background: #111; color: #fff; padding: 6px 10px; /* Enhanced cell heights */
     display: flex; align-items: baseline; gap: 8px;
   }
-  .p-num { font-size: 9px; opacity: .5; letter-spacing: .1em; }
+  .p-num { font-size: 10px; opacity: .5; letter-spacing: .1em; }
   .p-title {
-    font-family: 'Playfair Display', serif; font-size: 11px;
+    font-family: 'Playfair Display', serif; font-size: 13px; /* Up from 11px */
     font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
   }
   .p-sub {
-    font-size: 9px; opacity: .6; letter-spacing: .08em;
+    font-size: 10px; opacity: .6; letter-spacing: .08em;
     margin-left: auto; font-style: italic;
   }
 
   /* TABLE */
-  .data-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; } /* Up from 11px */
   .data-table th {
-    font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
-    color: #888; font-weight: 400; border-bottom: 1px solid #999;
-    padding: 3px 6px; text-align: left;
+    font-size: 9px; letter-spacing: .12em; text-transform: uppercase; /* Up from 8px */
+    color: #666; font-weight: 600; border-bottom: 1.5px solid #777;
+    padding: 5px 8px; text-align: left;
   }
   .data-table th.r { text-align: right; }
-  .data-table td { padding: 3px 6px; border-bottom: 1px solid #ebebeb; vertical-align: middle; }
-  .data-table td.r { text-align: right; font-variant-numeric: tabular-nums; }
-  .data-table td.ticker { font-size: 9.5px; letter-spacing: .04em; color: #444; font-weight: 600; }
-  .data-table td.label { font-style: italic; font-size: 10px; color: #333; }
-  .data-table td.rank { text-align: center; font-size: 10px; color: #aaa; width: 18px; }
-  .data-table td.role-col { font-size: 9px; color: #777; font-style: italic; }
+  .data-table td { padding: 5px 8px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; } /* Expanded breathing room */
+  .data-table td.r { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .data-table td.ticker { font-size: 11px; letter-spacing: .04em; color: #333; font-weight: 700; } /* Up from 9.5px */
+  .data-table td.label { font-style: italic; font-size: 12px; color: #222; } /* Up from 10px */
+  .data-table td.rank { text-align: center; font-size: 11px; color: #999; width: 22px; }
+  .data-table td.role-col { font-size: 10.5px; color: #666; font-style: italic; }
   .data-table tr:last-child td { border-bottom: none; }
-  .data-table tr.derived { background: #f6f6f6; }
-  .data-table tr.derived td { font-size: 10px; border-bottom: 1px solid #ddd; }
+  .data-table tr.derived { background: #f5f5f5; }
+  .data-table tr.derived td { font-size: 11.5px; border-bottom: 1px solid #dcdcdc; }
   .data-table tr.section-head td {
-    font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
-    color: #aaa; padding-top: 5px; padding-bottom: 2px;
-    border-bottom: 1px solid #d0d0d0;
+    font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+    color: #777; padding-top: 8px; padding-bottom: 4px;
+    border-bottom: 1px solid #ccc; font-weight: 700;
   }
 
-  .up   { color: #1a5c1a; }
-  .down { color: #8b1a1a; }
-  .neu  { color: #333; }
+  .up   { color: #154c15; }
+  .down { color: #7a1515; }
+  .neu  { color: #222; }
 
   .badge {
-    display: inline-block; padding: 1px 5px; font-size: 7.5px;
+    display: inline-block; padding: 2px 6px; font-size: 8.5px; /* Scaled up badges */
     letter-spacing: .07em; text-transform: uppercase;
-    border: 1px solid currentColor; vertical-align: middle; margin-left: 3px;
-    font-style: normal;
+    border: 1px solid currentColor; vertical-align: middle; margin-left: 4px;
+    font-style: normal; font-weight: 700;
   }
-  .badge.risk-on  { color: #1a5c1a; }
-  .badge.risk-off { color: #8b1a1a; }
-  .badge.neutral  { color: #777; }
+  .badge.risk-on  { color: #154c15; }
+  .badge.risk-off { color: #7a1515; }
+  .badge.neutral  { color: #555; }
 
   /* EQUITY SECTORS */
   .sector-label-row {
-    background: #f0f0f0; border-top: 1px solid #ccc; padding: 2px 8px;
+    background: #eee; border-top: 1px solid #ccc; padding: 4px 10px;
   }
   .sector-timeframe-label {
-    font-size: 8px; font-weight: 600; letter-spacing: .15em;
-    text-transform: uppercase; color: #888;
+    font-size: 9.5px; font-weight: 700; letter-spacing: .15em;
+    text-transform: uppercase; color: #666;
   }
   .sectors-grid {
     display: grid; grid-template-columns: repeat(11, 1fr);
-    border-top: 1px solid #ddd;
+    border-top: 1px solid #ccc;
   }
   .sector-cell {
-    padding: 4px 3px; border-right: 1px solid #e8e8e8;
+    padding: 6px 4px; border-right: 1px solid #e0e0e0;
     text-align: center;
   }
   .sector-cell:last-child { border-right: none; }
-  .sector-cell .s-tick { font-weight: 600; font-size: 10.5px; display: block; }
-  .sector-cell .s-name { display: block; font-size: 7px; color: #999; text-transform: uppercase; font-style: italic; margin: 1px 0; }
-  .sector-cell .s-val  { display: block; font-size: 11px; font-variant-numeric: tabular-nums; }
+  .sector-cell .s-tick { font-weight: 700; font-size: 12px; display: block; } /* Up from 10.5px */
+  .sector-cell .s-name { display: block; font-size: 8px; color: #777; text-transform: uppercase; font-style: italic; margin: 2px 0; }
+  .sector-cell .s-val  { display: block; font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 600; }
   .sector-cell.cyc { background: #fafafa; }
-  .sector-cell.def { background: #f2f2f2; }
-  .sectors-grid-1w .sector-cell.cyc { background: #f5f5f5; }
-  .sectors-grid-1w .sector-cell.def { background: #eeeeee; }
+  .sector-cell.def { background: #f0f0f0; }
+  .sectors-grid-1w .sector-cell.cyc { background: #f4f4f4; }
+  .sectors-grid-1w .sector-cell.def { background: #e9e9e9; }
+  
   .ratios-row {
-    border-top: 1px solid #111; display: grid; grid-template-columns: repeat(3,1fr);
+    border-top: 1.5px solid #111; display: grid; grid-template-columns: repeat(3,1fr);
   }
-  .ratio-cell { padding: 5px 9px; border-right: 1px solid #ccc; }
+  .ratio-cell { padding: 6px 10px; border-right: 1px solid #ccc; }
   .ratio-cell:last-child { border-right: none; }
-  .rc-label { font-size: 8px; letter-spacing: .1em; text-transform: uppercase; color: #999; }
-  .rc-val { font-size: 11.5px; font-weight: 600; }
+  .rc-label { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: #777; font-weight: 600; }
+  .rc-val { font-size: 13px; font-weight: 700; margin-top: 2px; }
 
   /* TOP 5 */
   .top5-grid {
-    display: grid; grid-template-columns: repeat(3,1fr); border-top: 1px solid #ddd;
+    display: grid; grid-template-columns: repeat(3,1fr); border-top: 1px solid #ccc;
   }
-  .top5-block { border-right: 1px solid #ddd; }
+  .top5-block { border-right: 1px solid #ccc; }
   .top5-block:last-child { border-right: none; }
   .top5-index-label {
-    background: #f5f5f5; padding: 4px 9px; font-size: 9px;
-    letter-spacing: .1em; text-transform: uppercase; color: #666;
-    border-bottom: 1px solid #ddd; font-style: italic;
+    background: #f2f2f2; padding: 5px 10px; font-size: 10.5px;
+    letter-spacing: .1em; text-transform: uppercase; color: #444;
+    border-bottom: 1px solid #ccc; font-style: italic; font-weight: 600;
   }
 
   /* NEWS */
   .news-grid {
     display: grid; grid-template-columns: repeat(3, 1fr);
-    border-top: 1px solid #ddd;
+    border-top: 1px solid #ccc;
   }
   .news-card {
-    padding: 9px 12px; border-right: 1px solid #eee; border-bottom: 1px solid #eee;
+    padding: 12px 14px; border-right: 1px solid #e8e8e8; border-bottom: 1px solid #e8e8e8;
   }
   .news-card:nth-child(3n) { border-right: none; }
-  .news-meta { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .news-meta { display: flex; justify-content: space-between; margin-bottom: 4px; }
   .news-source {
-    font-size: 8px; letter-spacing: .12em; text-transform: uppercase;
-    color: #888; font-weight: 600;
+    font-size: 9px; letter-spacing: .12em; text-transform: uppercase;
+    color: #666; font-weight: 700;
   }
-  .news-time { font-size: 8px; color: #bbb; font-style: italic; }
+  .news-time { font-size: 9px; color: #aaa; font-style: italic; }
   .news-title {
-    font-family: 'Playfair Display', serif; font-size: 12px; font-weight: 700;
-    line-height: 1.35; margin-bottom: 4px; color: #111;
+    font-family: 'Playfair Display', serif; font-size: 14px; font-weight: 700; /* Up from 12px */
+    line-height: 1.35; margin-bottom: 6px; color: #111;
   }
-  .news-desc { font-size: 10.5px; color: #555; line-height: 1.45; margin-bottom: 6px; font-style: italic; }
+  .news-desc { font-size: 12px; color: #444; line-height: 1.5; margin-bottom: 8px; font-style: italic; } /* Up from 10.5px */
   .news-link {
-    font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
-    color: #888; text-decoration: none; border-bottom: 1px solid #ccc;
+    font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+    color: #666; text-decoration: none; border-bottom: 1px solid #bbb; font-weight: 600;
   }
   .news-link:hover { color: #111; border-color: #111; }
 
   /* FOOTER */
   .footer {
-    border-top: 1px solid #111; padding-top: 5px;
+    border-top: 1.5px solid #111; padding-top: 6px; margin-top: 6px;
     display: flex; justify-content: space-between;
-    font-size: 9px; letter-spacing: .06em; color: #aaa; font-style: italic;
+    font-size: 10px; letter-spacing: .06em; color: #888; font-style: italic;
   }
 
-  /* MOBILE */
+  /* MOBILE RESPONSIVENESS ADJUSTMENTS */
+  @media (max-width: 1024px) {
+    .sectors-grid { grid-template-columns: repeat(6, 1fr); }
+    .sectors-grid .sector-cell:nth-child(6) { border-right: none; }
+  }
+
   @media (max-width: 768px) {
-    body { padding: 10px 12px; font-size: 12px; }
+    body { padding: 12px 14px; font-size: 14px; }
     .grid { grid-template-columns: 1fr; }
     .panel-wide { grid-column: 1; }
     .panel-2col { grid-column: 1; }
     .sectors-grid { grid-template-columns: repeat(4, 1fr); }
+    .sectors-grid .sector-cell:nth-child(4n) { border-right: none; }
     .ratios-row { grid-template-columns: 1fr; }
     .ratio-cell { border-right: none; border-bottom: 1px solid #ccc; }
     .ratio-cell:last-child { border-bottom: none; }
     .top5-grid { grid-template-columns: 1fr; }
-    .top5-block { border-right: none; border-bottom: 1px solid #ddd; }
+    .top5-block { border-right: none; border-bottom: 1px solid #ccc; }
     .regime-rows { overflow-x: auto; }
-    .regime-row { min-width: 600px; }
+    .regime-row { min-width: 650px; }
     .gauge-col { display: none; }
-    .header { flex-direction: column; gap: 6px; align-items: flex-start; }
+    .header { flex-direction: column; gap: 8px; align-items: flex-start; }
     .header-right { text-align: left; }
-    .masthead h1 { font-size: 20px; }
+    .masthead h1 { font-size: 24px; }
     .news-grid { grid-template-columns: 1fr; }
     .news-card { border-right: none; }
   }
@@ -262,7 +269,7 @@
   </div>
   <div class="header-right">
     <strong>Tuesday, 26 May 2026</strong><br>
-    11:14 CET &nbsp;&middot;&nbsp; Pre-Market Edition<br>
+    11:19 CET &nbsp;&middot;&nbsp; Pre-Market Edition<br>
     Data: Yahoo Finance &middot; yfinance
   </div>
 </div>
@@ -315,7 +322,7 @@
         <div class="regime-item">
           <span class="r-tf">1D</span>
           <span class="r-key">Cu / Au</span>
-          <span class="r-val up">+0.50%</span>
+          <span class="r-val up">+0.41%</span>
           <span class="r-tag">Growth Signal &middot; Yields Rising</span>
         </div>
         <div class="regime-item">
@@ -366,20 +373,20 @@
         <div class="regime-item">
           <span class="r-tf">1W</span>
           <span class="r-key">Cu / Au</span>
-          <span class="r-val up">+2.31%</span>
+          <span class="r-val up">+2.22%</span>
           <span class="r-tag">Growth Signal &middot; Yields Rising</span>
         </div>
         <div class="regime-item">
           <span class="r-tf">1W</span>
           <span class="r-key">AUD/JPY</span>
-          <span class="r-val up">+0.08%</span>
+          <span class="r-val up">+0.07%</span>
           <span class="r-tag">Carry Trade Alive &middot; Risk Appetite</span>
         </div>
           </div>
         </div>
         <div class="gauge-col">
           <div class="gauge-wrap">
-            <svg viewBox="0 0 195 60" xmlns="http://www.w3.org/2000/svg"
+            <svg viewBox="0 0 195 70" xmlns="http://www.w3.org/2000/svg"
      style="width:100%;max-width:195px;display:block">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="0">
@@ -391,27 +398,27 @@
     </linearGradient>
   </defs>
   
-  <text x="2" y="13.5" font-family="Georgia,serif" font-size="6.5"
+  <text x="2" y="15.0" font-family="Georgia,serif" font-size="7.5"
         font-weight="700" fill="#999">1D</text>
-  <rect x="26" y="4" width="140" height="10" rx="2" fill="url(#bg)"/>
-  <circle cx="122.6" cy="9.0" r="5" fill="#666" stroke="#fff" stroke-width="1.2"/>
-  <text x="172" y="13.5" font-family="Georgia,serif"
-        font-size="9" font-weight="bold" fill="#666">6.9</text>
-  <text x="172" y="22.0" font-family="Georgia,serif"
-        font-size="6" fill="#666" font-style="italic">Neutral</text>
-  <text x="2" y="39.5" font-family="Georgia,serif" font-size="6.5"
+  <rect x="26" y="4" width="140" height="12" rx="2" fill="url(#bg)"/>
+  <circle cx="122.6" cy="10.0" r="5.5" fill="#666" stroke="#fff" stroke-width="1.2"/>
+  <text x="172" y="15.0" font-family="Georgia,serif"
+        font-size="10.5" font-weight="bold" fill="#666">6.9</text>
+  <text x="172" y="25.0" font-family="Georgia,serif"
+        font-size="7" fill="#666" font-style="italic">Neutral</text>
+  <text x="2" y="45.0" font-family="Georgia,serif" font-size="7.5"
         font-weight="700" fill="#999">1W</text>
-  <rect x="26" y="30" width="140" height="10" rx="2" fill="url(#bg)"/>
-  <circle cx="122.6" cy="35.0" r="5" fill="#666" stroke="#fff" stroke-width="1.2"/>
-  <text x="172" y="39.5" font-family="Georgia,serif"
-        font-size="9" font-weight="bold" fill="#666">6.9</text>
-  <text x="172" y="48.0" font-family="Georgia,serif"
-        font-size="6" fill="#666" font-style="italic">Neutral</text>
-  <text x="26" y="59" font-family="Georgia,serif" font-size="5.5"
+  <rect x="26" y="34" width="140" height="12" rx="2" fill="url(#bg)"/>
+  <circle cx="122.6" cy="40.0" r="5.5" fill="#666" stroke="#fff" stroke-width="1.2"/>
+  <text x="172" y="45.0" font-family="Georgia,serif"
+        font-size="10.5" font-weight="bold" fill="#666">6.9</text>
+  <text x="172" y="55.0" font-family="Georgia,serif"
+        font-size="7" fill="#666" font-style="italic">Neutral</text>
+  <text x="26" y="69" font-family="Georgia,serif" font-size="6.5"
         fill="#bbb" text-anchor="middle">0</text>
-  <text x="96.0" y="59" font-family="Georgia,serif" font-size="5.5"
+  <text x="96.0" y="69" font-family="Georgia,serif" font-size="6.5"
         fill="#bbb" text-anchor="middle">5</text>
-  <text x="166" y="59" font-family="Georgia,serif" font-size="5.5"
+  <text x="166" y="69" font-family="Georgia,serif" font-size="6.5"
         fill="#bbb" text-anchor="middle">10</text>
 </svg>
           </div>
@@ -591,16 +598,16 @@
         
       <tr class="">
         <td class="ticker">DX-Y.NYB</td><td class="label">US Dollar Index</td>
-        <td class="r">99.05</td>
-        <td class="r down">-0.27%</td>
-        <td class="r up">+0.08%</td>
+        <td class="r">99.04</td>
+        <td class="r down">-0.28%</td>
+        <td class="r up">+0.07%</td>
         
       </tr>
       <tr class="">
         <td class="ticker">USDJPY=X</td><td class="label">USD/JPY</td>
-        <td class="r">159.15</td>
-        <td class="r up">+0.13%</td>
-        <td class="r up">+0.18%</td>
+        <td class="r">159.14</td>
+        <td class="r up">+0.12%</td>
+        <td class="r up">+0.17%</td>
         
       </tr>
       <tr class="">
@@ -612,18 +619,18 @@
       </tr>
       <tr class="">
         <td class="ticker">AUDJPY=X</td><td class="label">AUD/JPY</td>
-        <td class="r">114.00</td>
+        <td class="r">113.99</td>
         <td class="r up">+0.21%</td>
-        <td class="r up">+0.08%</td>
+        <td class="r up">+0.07%</td>
         
       </tr>
         <tr class="section-head"><td colspan="5">EM / CEE FX</td></tr>
         
       <tr class="">
         <td class="ticker">USDMXN=X</td><td class="label">USD/MXN</td>
-        <td class="r">17.2942</td>
-        <td class="r up">+0.20%</td>
-        <td class="r up">+0.12%</td>
+        <td class="r">17.2595</td>
+        <td class="r down">-0.22%</td>
+        <td class="r down">-0.48%</td>
         
       </tr>
       <tr class="">
@@ -635,16 +642,16 @@
       </tr>
       <tr class="">
         <td class="ticker">EURPLN=X</td><td class="label">EUR/PLN</td>
-        <td class="r">4.2311</td>
+        <td class="r">4.2310</td>
         <td class="r down">-0.13%</td>
         <td class="r down">-0.19%</td>
         
       </tr>
       <tr class="">
         <td class="ticker">USDPLN=X</td><td class="label">USD/PLN</td>
-        <td class="r">3.6342</td>
-        <td class="r down">-0.10%</td>
-        <td class="r down">-0.06%</td>
+        <td class="r">3.6339</td>
+        <td class="r down">-0.11%</td>
+        <td class="r down">-0.07%</td>
         
       </tr>
         <tr class="section-head"><td colspan="5">Volatility</td></tr>
@@ -899,39 +906,39 @@
       </tr>
       <tr class="">
         <td class="ticker">GC=F</td><td class="label">Gold</td>
-        <td class="r">4,520.70</td>
-        <td class="r down">-0.01%</td>
-        <td class="r down">-0.70%</td>
+        <td class="r">4,524.70</td>
+        <td class="r up">+0.08%</td>
+        <td class="r down">-0.61%</td>
         <td class="role-col">Real Rate Proxy / Geopolitical Risk</td>
       </tr>
       <tr class="">
         <td class="ticker">CL=F</td><td class="label">WTI Crude</td>
-        <td class="r">92.50</td>
-        <td class="r down">-4.24%</td>
-        <td class="r down">-14.87%</td>
+        <td class="r">92.39</td>
+        <td class="r down">-4.36%</td>
+        <td class="r down">-14.97%</td>
         <td class="role-col">Cost-Push Inflation / OPEC Policy</td>
       </tr>
       <tr class="">
         <td class="ticker">BZ=F</td><td class="label">Brent Crude</td>
-        <td class="r">96.17</td>
-        <td class="r down">-7.12%</td>
-        <td class="r down">-14.21%</td>
+        <td class="r">96.15</td>
+        <td class="r down">-7.14%</td>
+        <td class="r down">-14.23%</td>
         <td class="role-col">Global Benchmark</td>
       </tr>
         <tr class="derived">
           <td colspan="2" class="ticker">Brent &minus; WTI Spread</td>
-          <td class="r"><strong>$3.67</strong></td>
-          <td class="r down">$-3.27</td>
-          <td class="r up">+$0.23</td>
+          <td class="r"><strong>$3.76</strong></td>
+          <td class="r down">$-3.18</td>
+          <td class="r up">+$0.32</td>
           <td class="role-col" style="font-style:italic;">Quality/Transport premium</td>
         </tr>
         <tr class="derived">
           <td colspan="2" class="ticker">
             Cu / Au Ratio
-            <em style="font-size:9px;color:#aaa;font-style:italic;"> (Gundlach)</em>
+            <em style="font-size:10px;color:#aaa;font-style:italic;"> (Gundlach)</em>
           </td>
-          <td class="r" colspan="2"><strong>1D: +0.50%</strong></td>
-          <td class="r" colspan="2"><strong>1W: +2.31%</strong> <span class="badge risk-on">Growth Signal &middot; Yields Rising</span></td>
+          <td class="r" colspan="2"><strong>1D: +0.41%</strong></td>
+          <td class="r" colspan="2"><strong>1W: +2.22%</strong> <span class="badge risk-on">Growth Signal &middot; Yields Rising</span></td>
         </tr>
       </table>
     </div>
@@ -953,7 +960,7 @@
           <tr>
             <td class="rank">1</td>
             <td class="ticker">AAPL</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Apple Inc</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Apple Inc</td>
             <td class="r up">+1.26%</td>
             <td class="r up">+2.86%</td>
             <td class="r up">+14.16%</td>
@@ -961,7 +968,7 @@
           <tr>
             <td class="rank">2</td>
             <td class="ticker">TSLA</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Tesla Inc</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Tesla Inc</td>
             <td class="r up">+1.95%</td>
             <td class="r up">+0.89%</td>
             <td class="r down">-2.75%</td>
@@ -969,7 +976,7 @@
           <tr>
             <td class="rank">3</td>
             <td class="ticker">AMZN</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Amazon.com Inc</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Amazon.com Inc</td>
             <td class="r down">-0.80%</td>
             <td class="r up">+0.83%</td>
             <td class="r up">+17.58%</td>
@@ -977,7 +984,7 @@
           <tr>
             <td class="rank">4</td>
             <td class="ticker">BRK-B</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Berkshire Hathaway Inc Class B</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Berkshire Hathaway Inc Class B</td>
             <td class="r up">+1.33%</td>
             <td class="r up">+0.76%</td>
             <td class="r down">-2.11%</td>
@@ -985,7 +992,7 @@
           <tr>
             <td class="rank">5</td>
             <td class="ticker">MSFT</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Microsoft Corp</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Microsoft Corp</td>
             <td class="r down">-0.12%</td>
             <td class="r down">-0.58%</td>
             <td class="r down">-11.10%</td>
@@ -1001,42 +1008,42 @@
           <tr>
             <td class="rank">1</td>
             <td class="ticker">ASML.AS</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">ASML Holding NV</td>
-            <td class="r down">-1.47%</td>
-            <td class="r up">+12.86%</td>
-            <td class="r up">+43.43%</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">ASML Holding NV</td>
+            <td class="r down">-1.90%</td>
+            <td class="r up">+12.36%</td>
+            <td class="r up">+42.80%</td>
           </tr>
           <tr>
             <td class="rank">2</td>
             <td class="ticker">ENR.DE</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Siemens Energy AG Ordinary Shares</td>
-            <td class="r down">-1.40%</td>
-            <td class="r up">+6.58%</td>
-            <td class="r up">+46.17%</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Siemens Energy AG Ordinary Shares</td>
+            <td class="r down">-1.38%</td>
+            <td class="r up">+6.61%</td>
+            <td class="r up">+46.21%</td>
           </tr>
           <tr>
             <td class="rank">3</td>
             <td class="ticker">SIE.DE</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Siemens AG</td>
-            <td class="r down">-1.28%</td>
-            <td class="r up">+6.39%</td>
-            <td class="r up">+15.72%</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Siemens AG</td>
+            <td class="r down">-1.34%</td>
+            <td class="r up">+6.33%</td>
+            <td class="r up">+15.66%</td>
           </tr>
           <tr>
             <td class="rank">4</td>
-            <td class="ticker">SU.PA</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Schneider Electric SE</td>
-            <td class="r down">-2.34%</td>
+            <td class="ticker">SAN.MC</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Banco Santander SA</td>
+            <td class="r down">-0.46%</td>
             <td class="r up">+5.86%</td>
-            <td class="r up">+16.03%</td>
+            <td class="r up">+6.64%</td>
           </tr>
           <tr>
             <td class="rank">5</td>
-            <td class="ticker">SAN.MC</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Banco Santander SA</td>
-            <td class="r down">-0.50%</td>
-            <td class="r up">+5.82%</td>
-            <td class="r up">+6.60%</td>
+            <td class="ticker">SU.PA</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Schneider Electric SE</td>
+            <td class="r down">-2.36%</td>
+            <td class="r up">+5.84%</td>
+            <td class="r up">+16.00%</td>
           </tr>
           </table>
         </div>
@@ -1049,7 +1056,7 @@
           <tr>
             <td class="rank">1</td>
             <td class="ticker">2454.TW</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">MediaTek Inc</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">MediaTek Inc</td>
             <td class="r up">+0.47%</td>
             <td class="r up">+35.18%</td>
             <td class="r up">+195.76%</td>
@@ -1057,7 +1064,7 @@
           <tr>
             <td class="rank">2</td>
             <td class="ticker">2308.TW</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Delta Electronics Inc</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Delta Electronics Inc</td>
             <td class="r up">+2.62%</td>
             <td class="r up">+22.72%</td>
             <td class="r up">+136.18%</td>
@@ -1065,7 +1072,7 @@
           <tr>
             <td class="rank">3</td>
             <td class="ticker">000660.KS</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">SK Hynix Inc</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">SK Hynix Inc</td>
             <td class="r up">+5.72%</td>
             <td class="r up">+11.52%</td>
             <td class="r up">+203.66%</td>
@@ -1073,7 +1080,7 @@
           <tr>
             <td class="rank">4</td>
             <td class="ticker">005930.KS</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Samsung Electronics Co Ltd</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Samsung Electronics Co Ltd</td>
             <td class="r up">+2.22%</td>
             <td class="r up">+6.41%</td>
             <td class="r up">+133.17%</td>
@@ -1081,7 +1088,7 @@
           <tr>
             <td class="rank">5</td>
             <td class="ticker">2330.TW</td>
-            <td class="label" style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Taiwan Semiconductor Manufacturing Co Ltd</td>
+            <td class="label" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Taiwan Semiconductor Manufacturing Co Ltd</td>
             <td class="r down">-1.73%</td>
             <td class="r up">+2.95%</td>
             <td class="r up">+43.68%</td>
@@ -1102,7 +1109,16 @@
         <div class="news-card">
           <div class="news-meta">
             <span class="news-source">MarketWatch</span>
-            <span class="news-time">3m ago</span>
+            <span class="news-time">4m ago</span>
+          </div>
+          <div class="news-title">My friend, 62, earns $20,000 a year. Should she take Social Security now — or claim survivor’s benefit at 67?</div>
+          <div class="news-desc">“I calculated her break-even point to be around age 78.”</div>
+          <a class="news-link" href="https://www.marketwatch.com/story/my-friend-62-earns-20-000-a-year-should-she-take-social-security-now-or-claim-survivors-benefit-at-67-c661bdca?mod=mw_rss_topstories" target="_blank" rel="noopener noreferrer">Read &rarr;</a>
+        </div>
+        <div class="news-card">
+          <div class="news-meta">
+            <span class="news-source">MarketWatch</span>
+            <span class="news-time">8m ago</span>
           </div>
           <div class="news-title">Pony AI says its robotaxi revenue quintupled. The stock is rising.</div>
           <div class="news-desc">Pony AI on Tuesday reported a quintupling of robotaxi revenue and increased sales targets as the Chinese vehicle company also saw widening losses.</div>
@@ -1111,7 +1127,7 @@
         <div class="news-card">
           <div class="news-meta">
             <span class="news-source">FT Markets</span>
-            <span class="news-time">11m ago</span>
+            <span class="news-time">17m ago</span>
           </div>
           <div class="news-title">Deregulation hands top US and UK banks $1.3tn</div>
           <div class="news-desc">Regulatory loosening allows countries’ banks to expand balance sheets while EU and Swiss rivals are constrained</div>
@@ -1120,7 +1136,7 @@
         <div class="news-card">
           <div class="news-meta">
             <span class="news-source">FT Markets</span>
-            <span class="news-time">14m ago</span>
+            <span class="news-time">19m ago</span>
           </div>
           <div class="news-title">Fewer households should be exempt from energy bills, says regulator</div>
           <div class="news-desc">British customers owe a record £4.5bn to their power suppliers, 71 per cent more than in 2023, according to Ofgem</div>
@@ -1129,7 +1145,7 @@
         <div class="news-card">
           <div class="news-meta">
             <span class="news-source">MarketWatch</span>
-            <span class="news-time">14m ago</span>
+            <span class="news-time">19m ago</span>
           </div>
           <div class="news-title">‘There is zero transparency’: My friend’s sister controls their mother’s estate. How can we stop her from stealing?</div>
           <div class="news-desc">“The sister claims she does not have to explain herself to anyone.”</div>
@@ -1138,7 +1154,7 @@
         <div class="news-card">
           <div class="news-meta">
             <span class="news-source">Yahoo Fin.</span>
-            <span class="news-time">14m ago</span>
+            <span class="news-time">19m ago</span>
           </div>
           <div class="news-title">HELOC and home equity loan rates today, May 26, 2026: Lower than last month, sitting at or near 2026 lows</div>
           <div class="news-desc"></div>
@@ -1147,7 +1163,7 @@
         <div class="news-card">
           <div class="news-meta">
             <span class="news-source">Yahoo Fin.</span>
-            <span class="news-time">14m ago</span>
+            <span class="news-time">19m ago</span>
           </div>
           <div class="news-title">Mortgage and refinance rates today, May 26, 2026: Rates move back up</div>
           <div class="news-desc"></div>
@@ -1156,7 +1172,7 @@
         <div class="news-card">
           <div class="news-meta">
             <span class="news-source">Yahoo Fin.</span>
-            <span class="news-time">14m ago</span>
+            <span class="news-time">19m ago</span>
           </div>
           <div class="news-title">Best high-yield savings interest rates today, Tuesday, May 26, 2026: Earn up to 4.1% APY</div>
           <div class="news-desc"></div>
@@ -1165,7 +1181,7 @@
         <div class="news-card">
           <div class="news-meta">
             <span class="news-source">Yahoo Fin.</span>
-            <span class="news-time">14m ago</span>
+            <span class="news-time">19m ago</span>
           </div>
           <div class="news-title">Tech stocks today: AI stocks look to add to gains as IPO market heats up</div>
           <div class="news-desc"></div>
@@ -1174,20 +1190,11 @@
         <div class="news-card">
           <div class="news-meta">
             <span class="news-source">MarketWatch</span>
-            <span class="news-time">32m ago</span>
+            <span class="news-time">37m ago</span>
           </div>
           <div class="news-title">China’s hidden reserves may be the reason why oil prices haven’t exploded even higher</div>
           <div class="news-desc">There’s a high chance the Chinese government is injecting petroleum from a strategic supply into the market, Rory Johnston wrote in a recent Commodity Context newsletter.</div>
           <a class="news-link" href="https://www.marketwatch.com/story/chinas-hidden-reserves-may-be-the-reason-why-oil-prices-havent-exploded-even-higher-0e5f8fef?mod=mw_rss_topstories" target="_blank" rel="noopener noreferrer">Read &rarr;</a>
-        </div>
-        <div class="news-card">
-          <div class="news-meta">
-            <span class="news-source">MarketWatch</span>
-            <span class="news-time">59m ago</span>
-          </div>
-          <div class="news-title">‘I feel like I’m living a lie’: My husband and I pretend we’re strapped for cash in front of friends. Is that bad?</div>
-          <div class="news-desc">“I’ve found that acting ‘normal’ means others treat me like one of the group.”</div>
-          <a class="news-link" href="https://www.marketwatch.com/story/i-feel-like-im-living-a-lie-my-husband-and-i-pretend-were-strapped-for-cash-in-front-of-friends-is-that-bad-1cf6104a?mod=mw_rss_topstories" target="_blank" rel="noopener noreferrer">Read &rarr;</a>
         </div>
         <div class="news-card">
           <div class="news-meta">
@@ -1213,7 +1220,7 @@
 
 <div class="footer">
   <span>All prices indicative. Not investment advice. Sourced via yfinance.</span>
-  <span>Generated 2026-05-26 11:14 UTC &middot; First Glance &copy; 2026</span>
+  <span>Generated 2026-05-26 11:19 UTC &middot; First Glance &copy; 2026</span>
 </div>
 
 </body>
